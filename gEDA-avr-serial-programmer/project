@@ -1,0 +1,3 @@
+schematics avr-serial-programmer.sch
+elements-dir /home/ksarkies/Development-Electronics/pcb-local/
+output-name avr-serial-programmer
