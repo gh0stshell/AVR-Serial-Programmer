@@ -64,6 +64,7 @@ mode, and with or without verification.
 #include <QDebug>
 #include <QBasicTimer>
 #include <cstdlib>
+#include <unistd.h>
 #include <iostream>
 
 #define IDLE_CHAR 0xDD

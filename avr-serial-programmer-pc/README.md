@@ -1,14 +1,6 @@
 AVR Serial Programmer GUI
 =========================
 
-Copyright 2007 Ken W. Sarkies
-
-Target:    Linux
-Author:    Ken Sarkies
-Date:      28/4/2012
-Licence:   GPL 2
-gcc:       4.6.1
-QT         4.7.4
 Tested:    ATMega88, ATMega48, ATMega168, ATMega16, ATMega32, ATMEga8535,
 ATTiny2313, ATTiny461, ATTiny24, ATTiny44, ATTiny84, ATTiny4313.
 
@@ -289,4 +281,9 @@ operations code. Addition of features to provide command line operation.
 to have not been needed before). version 1.2Beta of qextserialport fails.
 Nothing returned from availableBytes().
 
-K. Sarkies 13/10/2011
+More information is provided at:
+
+http://www.jiggerjuice.info/electronics/projects/serialprogrammer/firmware-bootloader.html
+
+(c) K. Sarkies 19/07/2014
+

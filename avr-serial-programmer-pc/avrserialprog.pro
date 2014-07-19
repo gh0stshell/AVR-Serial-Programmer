@@ -2,7 +2,7 @@ PROJECT =       AVR Serial Programmer
 TEMPLATE =      app
 TARGET          += 
 DEPENDPATH      += .
-include(../../qextserialport/src/qextserialport.pri)
+include(../auxiliary/qextserialport-v1.2/src/qextserialport.pri)
 
 OBJECTS_DIR     = obj
 MOC_DIR         = moc

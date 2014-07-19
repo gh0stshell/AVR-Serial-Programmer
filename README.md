@@ -18,5 +18,9 @@ handle the increasing number of AVR target types.
 A GUI is provided. This reads the AVR fuse bits and signature bits and adapts
 the GUI configuration to the detected microcontroller type.
 
+More information is provided at:
+
+http://www.jiggerjuice.info/electronics/projects/serialprogrammer/firmware-bootloader.html
+
 (c) K. Sarkies 19/07/2014
 
