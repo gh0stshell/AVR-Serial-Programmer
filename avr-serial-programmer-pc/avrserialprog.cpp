@@ -403,7 +403,6 @@ void AvrSerialProg::on_readFileButton_clicked()
         {
             int length = 256;
             if (length > blockLength) length = blockLength;
-qDebug() << "Read Block" << startAddress << blockLength << length;
             uchar inBuffer[256];                // Buffer for serial read
             bool ok = readPage(inBuffer,length,startAddress,'F');
             if (! ok)
@@ -419,19 +418,21 @@ qDebug() << "Read Block" << startAddress << blockLength << length;
                 int bufferIndex = 0;
                 int lineIndex = 0;
                 int checksum = 0;
+                int countFF = 0;            // Count null data (unprogrammed)
                 while (bufferIndex < length)
                 {
-                    checksum = (checksum + inBuffer[bufferIndex]) & 0xFF;
-                    line += QString("%1").arg(inBuffer[bufferIndex],2,16,QChar('0'));
+                    uchar datum = inBuffer[bufferIndex];
+                    if (datum == 0xFF) countFF++;
+                    checksum = (checksum + datum) & 0xFF;
+                    line += QString("%1").arg(datum,2,16,QChar('0'));
                     bufferIndex++;
                     lineIndex++;
                     if ((lineIndex >= 16) || (bufferIndex >= length))
                     {
                         line += QString("%1").arg(0xFF-checksum,2,16,QChar('0'));
-// Write the line to the file
-qDebug() << "Line" << startAddress << length << lineIndex << bufferIndex << line;
+// Write the line to the file if not all FF's
                         QTextStream out(outFile);
-                        out << line + "\n";
+                        if (countFF < 16) out << line + "\n";
                         checksum = 0;
                         lineIndex = 0;
                         startAddress += 16;
