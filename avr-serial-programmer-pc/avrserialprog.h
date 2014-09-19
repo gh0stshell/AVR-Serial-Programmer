@@ -32,6 +32,7 @@ Title:    Atmel Microcontroller Serial Port FLASH loader
 #include "serialport.h"
 #include <QDialog>
 #include <QCloseEvent>
+#include <QDir>
 #include <QFile>
 
 //-----------------------------------------------------------------------------
@@ -83,6 +84,7 @@ private slots:
     void on_cancelButton_clicked();
     void on_OKButton_clicked();
     void on_openFileButton_clicked();
+    void on_readFileButton_clicked();
     void on_lockFuseButton_clicked();
 private:
     bool getReadBlockMode();
@@ -124,6 +126,9 @@ private:
     SerialPort* port;           //!< Serial port object pointer
     bool synchronized;          //!< Synchronization status
     QString errorMessage;       //!< Messages for the calling application
+    QDir saveDirectory;
+    QString saveFile;
+    QFile* outFile;
     QString identifier;         //!< AVR109 bootloader ID
     uchar lockFuse;             //!< Lock and Fuse capability byte
     uchar lockBits;

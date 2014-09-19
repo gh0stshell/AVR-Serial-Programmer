@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>409</width>
-    <height>431</height>
+    <width>445</width>
+    <height>493</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -68,7 +68,7 @@
   <widget class="QLabel" name="signatureDisplay">
    <property name="geometry">
     <rect>
-     <x>140</x>
+     <x>142</x>
      <y>120</y>
      <width>131</width>
      <height>20</height>
@@ -303,8 +303,8 @@
    <property name="geometry">
     <rect>
      <x>30</x>
-     <y>340</y>
-     <width>360</width>
+     <y>390</y>
+     <width>363</width>
      <height>30</height>
     </rect>
    </property>
@@ -315,7 +315,7 @@
        <string>Opens a hex file for writing or verifying, and proceeds to write and/or compare.</string>
       </property>
       <property name="text">
-       <string>Load File</string>
+       <string>Upload </string>
       </property>
      </widget>
     </item>
@@ -351,8 +351,8 @@
   <widget class="QProgressBar" name="uploadProgressBar">
    <property name="geometry">
     <rect>
-     <x>150</x>
-     <y>380</y>
+     <x>156</x>
+     <y>435</y>
      <width>118</width>
      <height>23</height>
     </rect>
@@ -420,11 +420,14 @@ THIS WILL DELETE ALL PROGRAM, EEPROM AND SETTINGS</string>
   <widget class="QLabel" name="errorMessage">
    <property name="geometry">
     <rect>
-     <x>30</x>
-     <y>410</y>
+     <x>36</x>
+     <y>465</y>
      <width>341</width>
      <height>17</height>
     </rect>
+   </property>
+   <property name="toolTip">
+    <string>Read the AVR memory to a file.</string>
    </property>
    <property name="text">
     <string/>
@@ -450,6 +453,74 @@ hard reset of the programmer before using again.</string>
    </property>
    <property name="checked">
     <bool>false</bool>
+   </property>
+  </widget>
+  <widget class="QPushButton" name="readFileButton">
+   <property name="geometry">
+    <rect>
+     <x>32</x>
+     <y>330</y>
+     <width>85</width>
+     <height>27</height>
+    </rect>
+   </property>
+   <property name="toolTip">
+    <string>Opens a hex file for writing or verifying, and proceeds to write and/or compare.</string>
+   </property>
+   <property name="text">
+    <string>Download </string>
+   </property>
+  </widget>
+  <widget class="QLineEdit" name="startAddressEdit">
+   <property name="geometry">
+    <rect>
+     <x>124</x>
+     <y>330</y>
+     <width>131</width>
+     <height>25</height>
+    </rect>
+   </property>
+  </widget>
+  <widget class="QLineEdit" name="endAddressEdit">
+   <property name="geometry">
+    <rect>
+     <x>262</x>
+     <y>330</y>
+     <width>131</width>
+     <height>25</height>
+    </rect>
+   </property>
+  </widget>
+  <widget class="QLabel" name="startAddressLabel">
+   <property name="geometry">
+    <rect>
+     <x>146</x>
+     <y>360</y>
+     <width>99</width>
+     <height>17</height>
+    </rect>
+   </property>
+   <property name="toolTip">
+    <string>Start address for AVR read</string>
+   </property>
+   <property name="text">
+    <string>Start Address</string>
+   </property>
+  </widget>
+  <widget class="QLabel" name="endAddressLabel">
+   <property name="geometry">
+    <rect>
+     <x>284</x>
+     <y>360</y>
+     <width>99</width>
+     <height>17</height>
+    </rect>
+   </property>
+   <property name="toolTip">
+    <string>End address for AVR read</string>
+   </property>
+   <property name="text">
+    <string>End Address</string>
    </property>
   </widget>
  </widget>

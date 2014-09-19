@@ -59,6 +59,8 @@ mode, and with or without verification.
 #include <QLabel>
 #include <QMessageBox>
 #include <QFileDialog>
+#include <QDir>
+#include <QFile>
 #include <QTextEdit>
 #include <QCloseEvent>
 #include <QDebug>
@@ -163,7 +165,7 @@ AvrSerialProg::AvrSerialProg(SerialPort* p, uint initialBaudrate,bool commandLin
         bootloaderFormUi.chipEraseButton->setEnabled(false);
         bootloaderFormUi.chipEraseButton->setVisible(false);
         if (debugMode) bootloaderFormUi.debugModeCheckBox->setChecked(true);
-	else bootloaderFormUi.debugModeCheckBox->setChecked(false);
+        else bootloaderFormUi.debugModeCheckBox->setChecked(false);
         bootloaderFormUi.uploadProgressBar->setVisible(false);
         bootloaderFormUi.errorMessage->setVisible(false);
         bootloaderFormUi.passThroughEnable->setChecked(true);
@@ -172,39 +174,46 @@ AvrSerialProg::AvrSerialProg(SerialPort* p, uint initialBaudrate,bool commandLin
 // Action if everything worked
         if (queryOK)
         {
-          bootloaderFormUi.idDisplay->setText(identifier);
-          bootloaderFormUi.signatureDisplay->setText(QString("0x%1%2%3")
+            bootloaderFormUi.idDisplay->setText(identifier);
+            bootloaderFormUi.signatureDisplay->setText(QString("0x%1%2%3")
                        .arg((uchar)signatureArray[2],2,16,QLatin1Char('0'))
                        .arg((uchar)signatureArray[1],2,16,QLatin1Char('0'))
                        .arg((uchar)signatureArray[0],2,16,QLatin1Char('0')));
-          bootloaderFormUi.typeDisplay->setText(deviceType);
-          if (lockFuse & 0x01)
-              bootloaderFormUi.lockDisplay->setText(QString("0x%1")
+            bootloaderFormUi.typeDisplay->setText(deviceType);
+            if (lockFuse & 0x01)
+                bootloaderFormUi.lockDisplay->setText(QString("0x%1")
                         .arg((uchar)lockBits,2,16,QLatin1Char('0')));
-          else
-          {
-              bootloaderFormUi.lockDisplay->setText("");
-              bootloaderFormUi.lockDisplay->setEnabled(false);
-          }
-          if (lockFuse & 0x0E)
-          {
-              QString fuseValues = "";
-              if (lockFuse & 0x02)
-                  fuseValues += "(L) " + QString("0x%1").arg(fuseBits,2,16,QLatin1Char('0'));
-              if (lockFuse & 0x04)
-                  fuseValues += " (H) " + QString("0x%1").arg(highFuseBits,2,16,QLatin1Char('0'));
-              if (lockFuse & 0x08)
-                  fuseValues += " (E) " + QString("0x%1").arg(extFuseBits,2,16,QLatin1Char('0'));
-              bootloaderFormUi.fuseDisplay->setText(fuseValues);
-          }
-          else
-              bootloaderFormUi.fuseDisplay->setEnabled(false);
-          bootloaderFormUi.autoAddressCheckBox->setEnabled(false);
-          bootloaderFormUi.autoAddressCheckBox->setChecked(autoincrement);
-          bootloaderFormUi.writeBlockModeCheckBox->setEnabled(blockSupport);
-          bootloaderFormUi.writeBlockModeCheckBox->setChecked(blockSupport);
-          bootloaderFormUi.readBlockModeCheckBox->setEnabled(blockSupport);
-          bootloaderFormUi.readBlockModeCheckBox->setChecked(blockSupport);
+            else
+            {
+                bootloaderFormUi.lockDisplay->setText("");
+                bootloaderFormUi.lockDisplay->setEnabled(false);
+            }
+            if (lockFuse & 0x0E)
+            {
+                QString fuseValues = "";
+                if (lockFuse & 0x02)
+                    fuseValues += "(L) " + 
+                            QString("0x%1").arg(fuseBits,2,16,QLatin1Char('0'));
+                if (lockFuse & 0x04)
+                    fuseValues += " (H) " + 
+                            QString("0x%1").arg(highFuseBits,2,16,QLatin1Char('0'));
+                if (lockFuse & 0x08)
+                    fuseValues += " (E) " + 
+                            QString("0x%1").arg(extFuseBits,2,16,QLatin1Char('0'));
+                bootloaderFormUi.fuseDisplay->setText(fuseValues);
+            }
+            else
+                bootloaderFormUi.fuseDisplay->setEnabled(false);
+                bootloaderFormUi.autoAddressCheckBox->setEnabled(false);
+                bootloaderFormUi.autoAddressCheckBox->setChecked(autoincrement);
+                bootloaderFormUi.writeBlockModeCheckBox->setEnabled(blockSupport);
+                bootloaderFormUi.writeBlockModeCheckBox->setChecked(blockSupport);
+                bootloaderFormUi.readBlockModeCheckBox->setEnabled(blockSupport);
+                bootloaderFormUi.readBlockModeCheckBox->setChecked(blockSupport);
+                bootloaderFormUi.startAddressEdit->setMaxLength(6);
+                bootloaderFormUi.startAddressEdit->setText("0x0000");
+                bootloaderFormUi.endAddressEdit->setMaxLength(6);
+                bootloaderFormUi.endAddressEdit->setText("0xFFFF");
         }
 // Action if something didn't work
         else
@@ -325,9 +334,9 @@ void AvrSerialProg::on_OKButton_clicked()
 }
 
 //-----------------------------------------------------------------------------
-/** @brief Open an AVR Intel Hex program file and perform requested operations.
+/** @brief Open an AVR Intel Hex program file for reading.
 
-Open file dialogue to select a file to upload and call a loader function.
+Open file dialogue to select a file to upload or verify.
 A .hex file indicates an Intel Hex file for Flash memory
 A .eep file indicates an intel hex file for EEPROM
 
@@ -354,6 +363,93 @@ void AvrSerialProg::on_openFileButton_clicked()
         }
     }
     if (error) QMessageBox::critical(this,"AVR Hex File Load Failure",errorMessage);
+}
+//-----------------------------------------------------------------------------
+/** @brief Create a File and Download
+
+The AVR is read between the start and end addresses specified and written to a
+file in Intel hex format suitable for upload.
+
+*/
+
+void AvrSerialProg::on_readFileButton_clicked()
+{
+    QString errorMessage;
+    bool error = false;
+// Open file dialogue to select a file to download.
+    QString filename = QFileDialog::getSaveFileName(this,
+                        "Read to Intel Hex File",
+                        QString(),
+                        "Intel Hex (*.hex)");
+    if (filename.isEmpty()) return;
+    if (! filename.endsWith(".hex")) filename.append(".hex");
+    QFileInfo fileInfo(filename);
+    saveDirectory = fileInfo.absolutePath();
+    saveFile = saveDirectory.filePath(filename);
+    outFile = new QFile(saveFile);             // Open file for output
+    if (! outFile->open(QIODevice::WriteOnly))
+    {
+        error = true;
+        errorMessage = "Could not open the output file";
+    }
+    else
+    {
+        bool ok;
+        int startAddress = bootloaderFormUi.startAddressEdit->text().toInt(&ok,16);
+        int endAddress = bootloaderFormUi.endAddressEdit->text().toInt(&ok,16);
+        int blockLength = endAddress - startAddress + 1;
+// Read in the memory to a buffer in 256 byte size blocks
+        while ((! error) && (blockLength > 0))
+        {
+            int length = 256;
+            if (length > blockLength) length = blockLength;
+qDebug() << "Read Block" << startAddress << blockLength << length;
+            uchar inBuffer[256];                // Buffer for serial read
+            bool ok = readPage(inBuffer,length,startAddress,'F');
+            if (! ok)
+            {
+                error = true;
+                errorMessage = "Device Read Failure";
+            }
+            else
+            {
+// Build Intel hex line
+                QString line = ":10"+QString("%1").arg(startAddress,4,16,QChar('0'))
+                                +"00";
+                int bufferIndex = 0;
+                int lineIndex = 0;
+                int checksum = 0;
+                while (bufferIndex < length)
+                {
+                    checksum = (checksum + inBuffer[bufferIndex]) & 0xFF;
+                    line += QString("%1").arg(inBuffer[bufferIndex],2,16,QChar('0'));
+                    bufferIndex++;
+                    lineIndex++;
+                    if ((lineIndex >= 16) || (bufferIndex >= length))
+                    {
+                        line += QString("%1").arg(0xFF-checksum,2,16,QChar('0'));
+// Write the line to the file
+qDebug() << "Line" << startAddress << length << lineIndex << bufferIndex << line;
+                        QTextStream out(outFile);
+                        out << line + "\n";
+                        checksum = 0;
+                        lineIndex = 0;
+                        startAddress += 16;
+                        line = ":10"+QString("%1").arg(startAddress,4,16,QChar('0'))
+                                +"00";
+                    }
+                }
+            }
+            blockLength -= length;
+        }
+// Terminating line
+        QString line = ":00000001FF";
+        QTextStream out(outFile);
+        out << line + "\n";
+        outFile->close();
+        delete outFile;
+    }
+    if (error) QMessageBox::critical(this,"AVR Hex File Read Failure",errorMessage);
 }
 //-----------------------------------------------------------------------------
 /** @brief Open a Target Device Specific dialogue for Lock and Fuse Bit Settings.
@@ -553,16 +649,9 @@ bool AvrSerialProg::uploadHex(QString filename)
     return error;
 }
 //-----------------------------------------------------------------------------
-/** @brief Open an AVR Intel Hex program file and perform requested operations.
+/** @brief Leave the Programming Mode.
 
-Open file to upload and call a loader function. This is for the command line
-operation only.
-
-A .hex file indicates an Intel Hex file for Flash memory
-A .eep file indicates an intel hex file for EEPROM
-
-@todo Add in EEPROM access, which involves the write and read page routines
-issuing the different commands.
+This is called from Main.
 */
 
 void AvrSerialProg::quitProgrammer()
@@ -616,7 +705,8 @@ Note also that the 16 bit words are stored MSB first in the buffer and in the ta
 @returns boolean indicating if an error occurred.
 */
 
-bool AvrSerialProg::loadHexCore(bool upload, bool verify, QString* errorMessage, QFile* file, const uchar memType)
+bool AvrSerialProg::loadHexCore(bool upload, bool verify, QString* errorMessage,
+                                QFile* file, const uchar memType)
 {
     char inBuffer[256];                     // Buffer for serial read
     bool sentOK = true;
@@ -662,7 +752,8 @@ the file stream (this will erase lock bits if not accessing a bootloader).*/
 				if (debugMode)
 				{
 	                qDebug() << line;
-    	            qDebug() << "Line Length " << lineLength << "Start Address" << address << "Record" << recordType;
+    	            qDebug() << "Line Length " << lineLength << "Start Address"
+                             << address << "Record" << recordType;
 				}
                 uint lineIndex = 0;	        // Index into line to be put in buffer
 /** On the first pass, the address of the first byte must be determined. This is
@@ -709,15 +800,17 @@ otherwise fill the local block buffer with the program data.*/
       		    	        }
 						if (debugMode)
 						{
-	                        qDebug() << address << lineIndex << runningAddress << blockIndex << line.mid(((lineIndex-1)<<1)+9,2) << blockBuffer[blockIndex];
+	                        qDebug() << address << lineIndex << runningAddress
+                                     << blockIndex << line.mid(((lineIndex-1)<<1)+9,2)
+                                     << blockBuffer[blockIndex];
 						}
                         ++runningAddress;       // track the address
                         ++blockIndex;
                     }
     		            else
   		    	        lineIndex = lineLength; // Terminate the loop
-/** When the block buffer has been filled, start a blockload command that transfers
-the block up to the device memory.*/
+/** When the block buffer has been filled, start a blockload command that
+transfers the block up to the device memory.*/
                     if (((blockIndex >= pageSize) || (recordType != 0)) && (blockIndex > 0))
                     {
                         if (debugMode)
@@ -727,8 +820,9 @@ the block up to the device memory.*/
                                  << " length " << blockIndex;
 //                                hexDumpBuffer(blockBuffer,blockIndex,blockStartAddress);
                         }
-/** We will attempt to write and verify the page. If it doesn't write we drop out, but if it doesn't verify we will
-continue retrying five times. Once written OK, bump the start address to the next page and reset the buffer. */
+/** We will attempt to write and verify the page. If it doesn't write we drop
+out, but if it doesn't verify we will continue retrying five times. Once
+written OK, bump the start address to the next page and reset the buffer. */
                         verifyOK = false;
                         sentOK = true;
                         uint retryCount = 5;
@@ -933,7 +1027,8 @@ bool AvrSerialProg::verifyPage(const uchar* blockBuffer,
             if (inBuffer[index]!=blockBuffer[index])
             {
                 verifyOK = false;
-                qDebug() << "Mismatch at " << QString("%1").arg(address+index,2,16,QLatin1Char('0'))
+                qDebug() << "Mismatch at " << QString("%1").
+                                    arg(address+index,2,16,QLatin1Char('0'))
 	                     << "Device Value "
                          << QString("0x%1")
                                    .arg((uchar)inBuffer[index],2,16,QLatin1Char('0'))
@@ -954,7 +1049,7 @@ bool AvrSerialProg::verifyPage(const uchar* blockBuffer,
 }
 /**@}*/
 /****************************************************************************/
-/** @defgroup accessDevice Functions to access the device
+/** @defgroup access Device Functions to access the device
 
 These functions pull together all code that accesses the device through the
 serial communications port. They implement the various programmer commands
@@ -1432,7 +1527,8 @@ bool AvrSerialProg::readPage(uchar* blockBuffer,
         else
 	    {
             port->read(inBuffer,numBytes);
-            if (debugMode) qDebug() << "Number of bytes read" << QString("%1").arg(numBytes,2,16,QLatin1Char('0'));
+            if (debugMode) qDebug() << "Number of bytes read"
+                    << QString("%1").arg(numBytes,2,16,QLatin1Char('0'));
 	        for (int bufferIndex = 0;bufferIndex < numBytes;bufferIndex++)
 		        blockBuffer[bufferIndex] = inBuffer[bufferIndex];
 	    }
@@ -1462,7 +1558,8 @@ Word comes as low first then high.*/
     {
         qDebug() << "Target Flash Memory Contents Read"
              << QString("Address 0x%1").arg((uchar)address,2,16,QLatin1Char('0'))
-             << QString("BlockLength 0x%1").arg((uchar)blockLength,2,16,QLatin1Char('0')) << numBytes;
+             << QString("BlockLength 0x%1").arg((uchar)blockLength,2,16,QLatin1Char('0'))
+             << numBytes;
         hexDumpBuffer(blockBuffer,blockLength,address);
     }
     return readOK;
@@ -1533,10 +1630,11 @@ command. If the expected bytes is specified as zero, the function will
 return for any non-zero number of bytes, otherwise it will return only when
 the specified number of bytes is received.
 
-The timeout is programmed to avoid program hangs if the serial interface is interrupted.
-However there is no error condition returned so the program merrily continues on.
-Make sure the timeout count is set to a high enough value to allow for slow links.
-You will be sure of this when your avr program uploads without errors.
+The timeout is programmed to avoid program hangs if the serial interface is
+interrupted. However there is no error condition returned so the program merrily
+continues on. Make sure the timeout count is set to a high enough value to allow
+for slow links. You will be sure of this when the avr program uploads without
+errors.
 
 @param[in] expectedBytes: The number of bytes expected to be returned.
 @returns Number of bytes actually received (0 if timeout).
