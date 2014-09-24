@@ -417,7 +417,7 @@ void AvrSerialProg::on_readFileButton_clicked()
                                 +"00";
                 int bufferIndex = 0;
                 int lineIndex = 0;
-                int checksum = 0;
+                int checksum = (0x0F+startAddress + (startAddress >> 8)) & 0xFF;
                 int countFF = 0;            // Count null data (unprogrammed)
                 while (bufferIndex < length)
                 {
@@ -432,10 +432,10 @@ void AvrSerialProg::on_readFileButton_clicked()
                         line += QString("%1").arg(0xFF-checksum,2,16,QChar('0'));
 // Write the line to the file if not all FF's
                         QTextStream out(outFile);
-                        if (countFF < 16) out << line + "\n";
-                        checksum = 0;
+                        if (countFF < 16) out << line + "\r\n";
                         lineIndex = 0;
                         startAddress += 16;
+                        checksum = (0x0F+startAddress + (startAddress >> 8)) & 0xFF;
                         line = ":10"+QString("%1").arg(startAddress,4,16,QChar('0'))
                                 +"00";
                     }
@@ -446,7 +446,7 @@ void AvrSerialProg::on_readFileButton_clicked()
 // Terminating line
         QString line = ":00000001FF";
         QTextStream out(outFile);
-        out << line + "\n";
+        out << line + "\r\n";
         outFile->close();
         delete outFile;
     }
