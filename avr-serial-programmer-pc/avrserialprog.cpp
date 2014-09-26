@@ -644,7 +644,7 @@ bool AvrSerialProg::downloadHex(QString filename, int startAddress, int endAddre
     QString errorMessage;
     bool error = false;
     qDebug() << "Downloading file " << filename;
-    if (! filename.isEmpty())
+    if (filename.isEmpty())
     {
         qDebug() << "Filename is blank";
         return true;
@@ -653,8 +653,8 @@ bool AvrSerialProg::downloadHex(QString filename, int startAddress, int endAddre
     QFileInfo fileInfo(filename);
     saveDirectory = fileInfo.absolutePath();
     saveFile = saveDirectory.filePath(filename);
-    outFile = new QFile(saveFile);             // Open file for output
-    if (! outFile->open(QIODevice::WriteOnly))
+    QFile outFile(saveFile);                // Open file for output
+    if (! outFile.open(QIODevice::WriteOnly))
     {
         error = true;
         errorMessage = "Could not open the output file";
@@ -666,11 +666,10 @@ bool AvrSerialProg::downloadHex(QString filename, int startAddress, int endAddre
         for (uint n=0; n<numberProgressSteps;n++) std::cerr << "-";
         std::cerr << "|" << std::endl;
         std::cerr << " ";
-        error = readHexCore(startAddress, blockLength, &errorMessage, outFile, 'F');
+        error = readHexCore(startAddress, blockLength, &errorMessage, &outFile, 'F');
         std::cerr << std::endl;
-        outFile->close();
+        outFile.close();
     }
-    delete outFile;
     if (error) qDebug() << errorMessage;
     return error;
 }
@@ -896,6 +895,7 @@ written OK, bump the start address to the next page and reset the buffer. */
 bool AvrSerialProg::readHexCore(uint startAddress, uint blockLength, QString* errorMessage,
                                 QFile* file, const uchar memType)
 {
+    int progress=0;
     bool error = false;
 // Read in the memory to a buffer in 256 byte size blocks
     while ((! error) && (blockLength > 0))
@@ -937,6 +937,7 @@ bool AvrSerialProg::readHexCore(uint startAddress, uint blockLength, QString* er
                     checksum = (0x0F+startAddress + (startAddress >> 8)) & 0xFF;
                     line = ":10"+QString("%1").arg(startAddress,4,16,QChar('0'))
                             +"00";
+                    if ((progress++ & 0x0F) == 0)updateProgress(progress);
                 }
             }
         }

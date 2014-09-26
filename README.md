@@ -5,9 +5,9 @@ This project is a small programmer for AVR microcontrollers using a serial
 connection. The circuit has a feature that allows the firmware to be loaded to
 the target microcontroller, and the serial line to be passed through to
 the target without manual intervention. A jumper setting allows for the
-programmer firmware to be updated. The microcontroller used is now the
-ATTiny4313. The original AT90S2313 is obsolete and the ATTiny2313 is now too
-limited.
+programmer firmware to be updated. The microcontroller used in the programmer
+hardware is now the ATTiny4313. The original AT90S2313 is obsolete and the
+ATTiny2313 is now too limited.
 
 The firmware manages the programming of an expandable range of AVR
 microcontrollers, FLASH, EEPROM and fuse bits, using the SPI port of the target
