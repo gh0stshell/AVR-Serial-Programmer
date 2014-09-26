@@ -78,19 +78,33 @@ int main(int argc,char ** argv)
     int baudParm;
     bool commandLineOnly = false;
     bool loadHex = false;
+    bool readHex = false;
     bool debug = false;
     bool verify = false;
     bool passThrough = false;
+    bool ok;
+    uint startAddress = 0;
+    uint endAddress = 0xFFFF;
     QString filename;
 
     opterr = 0;
-    while ((c = getopt (argc, argv, "w:P:ndvxb:")) != -1)
+    while ((c = getopt (argc, argv, "w:r:s:e:P:ndvxb:")) != -1)
     {
         switch (c)
         {
         case 'w':
             loadHex = true;
             filename = QString(optarg);
+            break;
+        case 'r':
+            readHex = true;
+            filename = QString(optarg);
+            break;
+        case 's':
+            startAddress = QString(optarg).toInt(&ok,16);
+            break;
+        case 'e':
+            endAddress = QString(optarg).toInt(&ok,16);
             break;
         case 'P':
             inPort = optarg;
@@ -152,14 +166,22 @@ int main(int argc,char ** argv)
              return true;
         }
     }
+/* Command line only actions */
     else
     {
         serialProgrammer.printDetails();
         serialProgrammer.setParameter(PASSTHROUGH,passThrough);
         serialProgrammer.setParameter(UPLOAD,loadHex);
         serialProgrammer.setParameter(VERIFY,verify);
-        if (loadHex) serialProgrammer.uploadHex(filename);
-        qDebug() << "Leaving Normally";
+        if (loadHex && readHex) qDebug() << "Read and write both specified";
+        else if (readHex && (!ok || (startAddress > endAddress)))
+            qDebug() << "Invalid hexadecimal address";
+        else
+        {
+            if (loadHex) serialProgrammer.uploadHex(filename);
+            if (readHex) serialProgrammer.downloadHex(filename,startAddress,endAddress);
+            qDebug() << "Leaving Normally";
+        }
         serialProgrammer.quitProgrammer();
     }
     return true;

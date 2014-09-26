@@ -76,6 +76,7 @@ public:
     void setParameter(param parameter, bool value);
     void printDetails();
     bool uploadHex(QString filename);
+    bool downloadHex(QString filename,int startAddress, int endAddress);
     void quitProgrammer();
 private slots:
     void on_debugModeCheckBox_stateChanged();
@@ -93,7 +94,10 @@ private:
     void updateProgress(int progress);
     bool loadHexGUI(QString* errorMessage, QFile* file, const uchar memType);
     bool loadHexCore(bool upload, bool verify, QString* errorMessage, QFile* file,
-                       const uchar memType);
+                     const uchar memType);
+    bool readHexGUI(QString* errorMessage, QFile* file, const uchar memType);
+    bool readHexCore(uint startAddress, uint blockLength, QString* errorMessage,
+                     QFile* file, const uchar memType);
     void hexDumpBuffer(const uchar* blockBuffer,
                        const uint blockLength,
                        const uint address);
