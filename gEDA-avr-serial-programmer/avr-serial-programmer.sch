@@ -466,5 +466,47 @@ footprint=RCY100P
 C 41200 42700 1 0 1 gnd-1.sym
 C 42400 42100 1 0 1 gnd-1.sym
 C 43300 42100 1 0 1 gnd-1.sym
-C 43200 43500 1 270 0 vcc-1.sym
-N 43200 43300 41100 43300 4
+C 45800 43500 1 270 0 vcc-1.sym
+N 41100 43300 45800 43300 4
+C 44200 42400 1 90 0 capacitor-1.sym
+{
+T 43900 41900 5 10 1 1 0 0 1
+value=0.1uF
+T 44300 42600 5 10 0 0 90 0 1
+device=CAPACITOR
+T 44200 41800 5 10 1 1 180 0 1
+refdes=C10
+T 44100 42600 5 10 0 0 90 0 1
+symversion=0.1
+T 44200 42400 5 10 0 0 0 0 1
+footprint=CK05_type_Capacitor
+}
+C 44100 42100 1 0 1 gnd-1.sym
+C 45000 42400 1 90 0 capacitor-1.sym
+{
+T 44700 41900 5 10 1 1 0 0 1
+value=0.1uF
+T 45100 42600 5 10 0 0 90 0 1
+device=CAPACITOR
+T 45000 41800 5 10 1 1 180 0 1
+refdes=C11
+T 44900 42600 5 10 0 0 90 0 1
+symversion=0.1
+T 45000 42400 5 10 0 0 0 0 1
+footprint=CK05_type_Capacitor
+}
+C 44900 42100 1 0 1 gnd-1.sym
+C 45800 42400 1 90 0 capacitor-1.sym
+{
+T 45500 41900 5 10 1 1 0 0 1
+value=0.1uF
+T 45900 42600 5 10 0 0 90 0 1
+device=CAPACITOR
+T 45800 41800 5 10 1 1 180 0 1
+refdes=C12
+T 45700 42600 5 10 0 0 90 0 1
+symversion=0.1
+T 45800 42400 5 10 0 0 0 0 1
+footprint=CK05_type_Capacitor
+}
+C 45700 42100 1 0 1 gnd-1.sym
