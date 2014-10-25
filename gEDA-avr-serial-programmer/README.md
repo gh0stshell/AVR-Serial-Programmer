@@ -2,7 +2,7 @@ AVR Serial Programmer PCB
 -------------------------
 
 This provides the schematic and PCB layout using gEDA and the associated pcb
-tools.
+tools. The final PCB is bundled with some SMPS circuits.
 
 More information is provided at:
 
