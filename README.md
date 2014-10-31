@@ -16,7 +16,8 @@ ATTiny2313 and ATTiny4313. The former is deprecated. The latter is needed to
 handle the increasing number of AVR target types.
 
 A GUI is provided. This reads the AVR fuse bits and signature bits and adapts
-the GUI configuration to the detected microcontroller type.
+the GUI configuration to the detected microcontroller type. The GUI may be used
+directly with a bootloader following the AVR109 command interface.
 
 More information is provided at:
 
