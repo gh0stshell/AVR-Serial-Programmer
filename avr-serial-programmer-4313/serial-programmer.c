@@ -7,28 +7,30 @@
 @brief Code for the embedded portion of the Battery Charger Project,
 for an 8MHz Atmel MCU of the family AT90S2313.
 
-@details This is the AVR code for the stand-alone serial programmer that interfaces to
-the PC via a serial (USB) link and to the target via the SPI interface.
+@details This is the AVR code for the stand-alone serial programmer that
+interfaces to the PC via a serial (USB) link and to the target via the SPI
+interface.
 
-The board is designed to receive serial commands that are compatible with the AVRPROG
-command set, and to activate the SPI interface to program a target AVR microcontroller.
-The board uses the AT90S2313 (probably obsolete) AVR microcontroller (which can be
-replaced by the ATTiny2313 and ATTiny4313).
+The board is designed to receive serial commands that are compatible with the
+AVRPROG command set, and to activate the SPI interface to program a target AVR
+microcontroller. The board uses the AT90S2313 (probably obsolete) AVR
+microcontroller (which can be replaced by the ATTiny2313 and ATTiny4313).
 
-The SPI port is used along with an additional output pin used to hold the target in a reset
-state. When programming has been completed, the board switches the serial communications to
-pass through to the target. This switches the incoming serial communications from the target
-through to the PC. The outgoing communications from the PC are simply copied to the target.
+The SPI port is used along with an additional output pin used to hold the target
+in a reset state. When programming has been completed, the board switches the
+serial communications to pass through to the target. This switches the incoming
+serial communications from the target through to the PC. The outgoing
+communications from the PC are simply copied to the target.
 
 Refer to the Project documents for more details.
 
 The main differences between targets are:
-1. The availability of a busy status. If not available, fixed delays need to be added
-   where memory accesses are made, or rereading of the memory location.
-2. The use of paged or individual FLASH memory programming. EEPROM can always be accessed
-   individually, but some devices allow paged writes.
-3. The size of the memory pages. The AT90S2313 and ATTiny2313 are limited to 32 word page
-   support.
+1. The availability of a busy status. If not available, fixed delays need to be
+   added where memory accesses are made, or rereading of the memory location.
+2. The use of paged or individual FLASH memory programming. EEPROM can always be
+   accessed individually, but some devices allow paged writes.
+3. The size of the memory pages. The AT90S2313 and ATTiny2313 are limited to 32
+   word page support.
 4. The need to access Fuse, High Fuse and Extended Fuse bits.
 5. While all have programmable lock bits, not all can be read.
 
@@ -99,7 +101,7 @@ protocol to complete correctly even if the capability is not supported.
 #include "serial-programmer.h"
 #include <util/delay.h>
 
-/***************************************************************************************/
+/*****************************************************************************/
 /* Functions to send/receive */
 
 /* This defines our baudrate 25=19200, 12=38400, 8=57600 */
@@ -113,7 +115,7 @@ protocol to complete correctly even if the capability is not supported.
 #define	UART_STATUS USR
 #endif
 
-/***************************************************************************************/
+/*****************************************************************************/
 void initbootuart(void)
 {
 #ifdef _ATtiny2313
@@ -129,7 +131,7 @@ void initbootuart(void)
 #endif
 }
 
-/***************************************************************************************/
+/*****************************************************************************/
 void sendchar(unsigned char c)
 {
     UDR = c;                                // Load data to Tx buffer
@@ -137,19 +139,20 @@ void sendchar(unsigned char c)
     UART_STATUS |= (1 << TXC);              // clear TXCflag
 }
 
-/***************************************************************************************/
+/*****************************************************************************/
 unsigned char recchar(void)
 {
   while(!(UART_STATUS & (1 << RXC)));       // wait for data
   return UDR;
 }
 
-/***************************************************************************************/
+/*****************************************************************************/
 /** @brief Array of parts and properties
 
 This lists all the target devices supported by the programmer.
 
-The first signature byte is assumed to be always E1. If not, then we abort programming.
+The first signature byte is assumed to be always E1. If not, then we abort
+programming.
 Flash and EEPROM page sizes zero means that page writes are not supported.
 Lock and Fuse support is given by a bitwise quantity.
 0 = Lock Read
@@ -166,8 +169,9 @@ Lock and Fuse support is given by a bitwise quantity.
 We don't do the AT90S2313 yet as it requires special code development
 FPage is the FLASH  pagesize in words
 EPage is the EEPROM pagesize in bytes
+Busy indicates if the programming hardware provides a busy flag
 */
-#define NUMPARTS 16
+#define NUMPARTS 18
 uint8_t part[NUMPARTS][6] = {
 /* Sig 2, Sig 3, FPage, EPage, Busy, Lock/Fuse */
 //{   0x91,  0x01,    0,    0,   FALSE,  0x10     },  // AT90S2313
@@ -179,16 +183,18 @@ uint8_t part[NUMPARTS][6] = {
 {   0x92,  0x0D,   32,    4,   TRUE,   0xFF     },  // ATTiny4313
 {   0x92,  0x05,   32,    4,   TRUE,   0xFF     },  // ATMega48
 {   0x92,  0x08,   32,    4,   TRUE,   0xFF     },  // ATTiny461
+{   0x92,  0x15,    8,    4,   TRUE,   0xFF     },  // ATTiny441
 {   0x93,  0x0C,   32,    4,   TRUE,   0xFF     },  // ATTiny84
 {   0x93,  0x08,   32,    0,   FALSE,  0x77     },  // ATMega8535
 {   0x93,  0x0A,   32,    4,   TRUE,   0xFF     },  // ATMega88
 {   0x93,  0x0D,   32,    4,   TRUE,   0xFF     },  // ATTiny861
+{   0x93,  0x15,    8,    4,   TRUE,   0xFF     },  // ATTiny841
 {   0x94,  0x03,   64,    4,   TRUE,   0x77     },  // ATMega16
 {   0x94,  0x06,   64,    4,   TRUE,   0xFF     },  // ATMega168
 {   0x95,  0x0F,   64,    4,   TRUE,   0xFF     },  // ATMega328
 {   0x95,  0x02,   64,    0,   FALSE,  0x77     }   // ATMega32
 };
-/***************************************************************************************/
+/*****************************************************************************/
 
 uint16_t address;                   // Address to program
 uint8_t command;                    // received instruction character
@@ -218,9 +224,9 @@ int main(void)
     PB6 = MISO
     PB7 = SCK */
 
-    sbi(ACSR,7);                                        // Turn off Analogue Comparator
-    initbootuart();           	                        // Initialize UART.
-    uint8_t sigByte1=0;                                 // Target Definition defaults
+    sbi(ACSR,7);                        // Turn off Analogue Comparator
+    initbootuart();           	        // Initialize UART.
+    uint8_t sigByte1=0;                 // Target Definition defaults
     uint8_t sigByte2=0;
     uint8_t sigByte3=0;
     uint8_t fuseBits=0;
@@ -233,52 +239,53 @@ int main(void)
     {
         for(;;)
         {
-            command=recchar();                          // Loop and wait for command character.
+            command=recchar();          // Loop and wait for command character.
 
 /** 'a' Check autoincrement status.
 This allows a block of data to be uploaded to consecutive addresses without
 specifying the address each time */
             if (command=='a')
             {
-                sendchar('Y');                          // Yes, we will autoincrement.
+                sendchar('Y');          // Yes, we will autoincrement.
             }
 
 /** 'A' Set address.
 This is stored and incremented for each upload/download.
 NOTE: Flash addresses are given as word addresses, not byte addresses. */
-            else if (command=='A')                       // Set address
+            else if (command=='A')      // Set address
             {
-                address = (recchar()<<8);               // Set address high byte first.
-                address |= recchar();                   // Then low byte.
-                sendchar('\r');                         // Send OK back.
+                address = (recchar()<<8);   // Set address high byte first.
+                address |= recchar();       // Then low byte.
+                sendchar('\r');             // Send OK back.
             }
 
 /** 'b' Check block load support. This returns the allowed block size.
 We will not buffer anything so we will use the FLASH page size to limit
-the programmer's blocks to those that will fit the target's page. This then avoids
-the long delay when the page is committed, that may cause incoming data to be lost.
-This should not be called before the P command is executed, and the target device
-characteristics obtained. The fPageSize characteristic should be non zero.*/
+the programmer's blocks to those that will fit the target's page. This then
+avoids the long delay when the page is committed, that may cause incoming data
+to be lost. This should not be called before the P command is executed, and the
+target device characteristics obtained. The fPageSize characteristic should be
+non zero.*/
            else if (command=='b')
             {
                 uint16_t blockLength = ((uint16_t)fPageSize<<1);
-                if (fPageSize > 0) sendchar('Y');       // Report block load supported.
+                if (fPageSize > 0) sendchar('Y');   // Report block load supported.
                 else sendchar('N');
-                sendchar(high(blockLength));            // MSB first.
-                sendchar(low(blockLength));             // Report FLASH pagesize (bytes).
+                sendchar(high(blockLength));        // MSB first.
+                sendchar(low(blockLength));         // Report FLASH pagesize (bytes).
             }
 
 /** 'p' Get programmer type. This returns just 'S' for serial. */
             else if (command=='p')
             {
-                sendchar('S');                          // Answer 'SERIAL'.
+                sendchar('S');                      // Answer 'SERIAL'.
             }
 
 /** 'S' Return programmer identifier. Always 7 digits. We call it AVRSPRG */
             else if (command=='S')
             {
                 sendchar('A');
-                sendchar('V');                          // ID always 7 characters.
+                sendchar('V');                      // ID always 7 characters.
                 sendchar('R');
                 sendchar('S');
                 sendchar('P');
@@ -293,8 +300,9 @@ characteristics obtained. The fPageSize characteristic should be non zero.*/
                 sendchar('0');
             }
 
-/** 't' Return supported device codes. This returns a list of devices that can be programmed.
-This is only used by AVRPROG so we will not use it - we work with signature bytes instead. */
+/** 't' Return supported device codes. This returns a list of devices that can
+be programmed. This is only used by AVRPROG so we will not use it - we work with
+signature bytes instead. */
             else if(command=='t')
             {
                 sendchar( 0 );                          // Send list terminator.
@@ -310,25 +318,26 @@ This is only used by AVRPROG so we will not use it - we work with signature byte
             }
 
 /** 'P' Enter programming mode.
-This starts the programming of the device. Pulse the reset line high while SCK is low.
-Send the command and ensure that the echoed second byte is correct, otherwise redo.
-With this we get the device signature and search the table for its characteristics.
-A timeout is provided in case the device doesn't respond. This will allow fall through
-to an ultimate error response.
+This starts the programming of the device. Pulse the reset line high while SCK
+is low. Send the command and ensure that the echoed second byte is correct,
+otherwise redo. With this we get the device signature and search the table for
+its characteristics. A timeout is provided in case the device doesn't respond.
+This will allow fall through to an ultimate error response.
 The reset line is held low until programming mode is exited. */
             else if (command=='P')
             {
-                outb(DDRB,(inb(DDRB) | 0xB9));          // Setup SPI output ports
-                outb(PORTB,(inb(PORTB) | 0xB9));        // SCK and MOSI high, and LEDs off
+                outb(DDRB,(inb(DDRB) | 0xB9));      // Setup SPI output ports
+                outb(PORTB,(inb(PORTB) | 0xB9));    // SCK and MOSI high, and LEDs off
                 uint8_t retry = 10;
                 uint8_t result = 0;
                 while ((result != 0x53) && (retry-- > 0))
                 {
-                    cbi(PORTB,SCK);                     // Set serial clock low
-                    sbi(PORTB,RESET);                   // Pulse reset line off
-                    _delay_us(100);                     // Delay to let CPU know that programming will occur
-                    cbi(PORTB,RESET);                   // Pulse reset line on
-                    _delay_us(25000);                   // 25ms delay
+                    cbi(PORTB,SCK);                 // Set serial clock low
+                    sbi(PORTB,RESET);               // Pulse reset line off
+// Delay to let CPU know that programming will occur
+                    _delay_us(100);
+                    cbi(PORTB,RESET);               // Pulse reset line on
+                    _delay_us(25000);               // 25ms delay
                     writeCommand(0xAC,0x53,0x00,0x00);  // "Start programming" command
                     result=buffer[2];
                 }
@@ -338,17 +347,19 @@ about the target device such as its memory sizes, page sizes and capabilities. *
                 sigByte1 = buffer[3];
                 writeCommand(0x30,0x00,0x01,0x00);
                 sigByte2 = buffer[3];
-                writeCommand(0x30,0x00,0x02,0x00);      // Signature Bytes
+                writeCommand(0x30,0x00,0x02,0x00);  // Signature Bytes
                 sigByte3 = buffer[3];
 /* Check for device support. If the first signature byte is not 1E, then the device is
 either not an Atmel device, is locked, or is not responding.*/
-                uint8_t found=FALSE;                    // Indicates if the target device is supported
+// Indicate if the target device is supported.
+                uint8_t found=FALSE;
                 uint8_t partNo = 0;
                 if (sigByte1 == 0x1E)
                 {
                     while ((partNo < NUMPARTS) && (! found))
                     {
-                        found = ((part[partNo][0] == sigByte2) && (part[partNo][1] == sigByte3));
+                        found = ((part[partNo][0] == sigByte2) &&
+                                (part[partNo][1] == sigByte3));
                         partNo++;
                     }
                 }
@@ -361,13 +372,17 @@ either not an Atmel device, is locked, or is not responding.*/
                     canCheckBusy = part[partNo][4];
                     lfCapability = part[partNo][5];
                     buffer[3] = 0;                      // In case we cannot read these
-                    if (lfCapability & 0x08) writeCommand(0x50,0x08,0x00,0x00);  // Read Extended Fuse Bits
+                    if (lfCapability & 0x08)
+                        writeCommand(0x50,0x08,0x00,0x00);  // Read Extended Fuse Bits
                     extendedFuseBits = buffer[3];
-                    if (lfCapability & 0x04) writeCommand(0x58,0x08,0x00,0x00);  // Read High Fuse Bits
+                    if (lfCapability & 0x04)
+                        writeCommand(0x58,0x08,0x00,0x00);  // Read High Fuse Bits
                     highFuseBits = buffer[3];
-                    if (lfCapability & 0x02) writeCommand(0x50,0x00,0x00,0x00);  // Read Fuse Bits
+                    if (lfCapability & 0x02)
+                        writeCommand(0x50,0x00,0x00,0x00);  // Read Fuse Bits
                     fuseBits = buffer[3];
-                    if (lfCapability & 0x01) writeCommand(0x58,0x00,0x00,0x00);  // Read Lock Bits
+                    if (lfCapability & 0x01)
+                        writeCommand(0x58,0x00,0x00,0x00);  // Read Lock Bits
                     lockBits = buffer[3];
                 }
                 else                                    // Not found?
@@ -387,7 +402,7 @@ either not an Atmel device, is locked, or is not responding.*/
             }
 
 /** 'e' Chip erase.
-This requires several ms. Ensure that the command has finished before acknowledging. */
+This requires several ms. Ensure the command has finished before acknowledging. */
             else if (command=='e')
             {
                 writeCommand(0xAC,0x80,0x00,0x00);      // Erase command
@@ -430,14 +445,16 @@ the responsibility of the user to issue a page write command.*/
                 sendchar('\r');                         // Send OK back.
             }
 
-/** 'm' Issue Page Write. This writes the target device page buffer to the Flash.
-The address is that of the page, with the lower bits masked out.
-This requires several ms. Ensure that the command has finished before acknowledging.
-We could check for end of memory here but that would require storing the Flash capacity
-for each device. The calling program will know in any case if it has overstepped.*/
+/** 'm' Issue Page Write. This writes the target device page buffer to the
+Flash. The address is that of the page, with the lower bits masked out. This
+requires several ms. Ensure that the command has finished before acknowledging.
+We could check for end of memory here but that would require storing the Flash
+capacity for each device. The calling program will know in any case if it has
+overstepped.*/
             else if (command== 'm')
             {
-                writeCommand(0x4C,(address>>8) & 0x7F,address & 0xE0,0x00);  // Write Page
+// Write Page
+                writeCommand(0x4C,(address>>8) & 0x7F,address & 0xE0,0x00);
                 pollDelay(TRUE);                        // Short delay
                 sendchar('\r');                         // Send OK back.
             }
@@ -448,7 +465,8 @@ This requires several ms. Ensure that the command has finished before acknowledg
             {
                 lsbAddress = low(address);
                 msbAddress = high(address);
-                writeCommand(0xC0,msbAddress,lsbAddress,recchar());     // EEPROM byte
+// EEPROM byte
+                writeCommand(0xC0,msbAddress,lsbAddress,recchar());
                 address++;                              // Auto-advance to next EEPROM byte.
                 pollDelay(FALSE);                       // Long delay
                 sendchar('\r');                         // Send OK back.
@@ -504,7 +522,8 @@ This requires several ms. Ensure that the command has finished before acknowledg
 /** 'f' Write fuse bits. */
             else if (command=='f')
             {
-                if (lfCapability & 0x20) writeCommand(0xAC,0xA0,0x00,recchar()); // Fuse byte
+// Fuse byte
+                if (lfCapability & 0x20) writeCommand(0xAC,0xA0,0x00,recchar());
                 sendchar('\r');                         // Send OK back.
             }
 
@@ -517,7 +536,8 @@ This requires several ms. Ensure that the command has finished before acknowledg
 /** 'n' Write high fuse bits. */
             else if (command=='n')
             {
-                if (lfCapability & 0x40) writeCommand(0xAC,0xA8,0x00,recchar()); // High Fuse byte
+// High Fuse byte
+                if (lfCapability & 0x40) writeCommand(0xAC,0xA8,0x00,recchar());
                 sendchar('\r');                         // Send OK back.
             }
 
@@ -530,7 +550,8 @@ This requires several ms. Ensure that the command has finished before acknowledg
 /** 'q' Write extended fuse bits. */
             else if (command=='q')
             {
-                if (lfCapability & 0x80) writeCommand(0xAC,0xA4,0x00,recchar()); // Extended Fuse byte
+// Extended Fuse byte
+                if (lfCapability & 0x80) writeCommand(0xAC,0xA4,0x00,recchar());
                 sendchar('\r');                         // Send OK back.
             }
 
@@ -550,17 +571,17 @@ don't interpret serial data, and wait for our own hard reset.*/
             else if (command=='E')
             {
                 sendchar('\r');
-                sbi(PORTB,RESET);                       // Pulse reset line off
-                cbi(PORTB,PASSTHROUGH);                 // Change to serial passthrough
-                outb(DDRB,(inb(DDRB) & ~0xA0));         // Set SPI ports to inputs
+                sbi(PORTB,RESET);               // Pulse reset line off
+                cbi(PORTB,PASSTHROUGH);         // Change to serial passthrough
+                outb(DDRB,(inb(DDRB) & ~0xA0)); // Set SPI ports to inputs
                 for (;;);                    // Spin endlessly
             }
 
 /** The last command to accept is ESC (synchronization).
-This is used to abort any command by filling in remaining parameters, after which
-it is simply ignored.
+This is used to abort any command by filling in remaining parameters, after
+which it is simply ignored.
 Otherwise, the command is not recognized and a "?" is returned.*/
-            else if (command!=0x1b) sendchar('?');       // If not ESC, then it is unrecognized
+            else if (command!=0x1b) sendchar('?');  // If not ESC, then it is unrecognized
         }
     }
 }
@@ -571,19 +592,19 @@ Otherwise, the command is not recognized and a "?" is returned.*/
 Block Load can be used to reduce the traffic on the serial link.
 
 The block is read in and is written page by page to the AVR internal page buffer,
-each page followed by a page write. The program allows for blocksizes larger than
-the target page buffer. The EEPROM internal buffer is typically only 4
+each page followed by a page write. The program allows for blocksizes larger
+than the target page buffer. The EEPROM internal buffer is typically only 4
 bytes, while the FLASH buffer can be from 16 to 64 words.
 
 Take care that EEPROM addresses are given in bytes, while FLASH addresses are
 in words.
 
-The code is a bit involved when dealing with non-paged support. We do not use pages
-at all so pageSize is irrelevant and ends up being -1, which in unsigned arithmetic
-should be all 1's. However it is used to set the addresses in both paged and non-
-paged modes, so we may see some side-effects here. It should be worked a bit better
-but space is running out. In the devices, pages are always used when the memory
-is above a certain size, so 8-bit addressing should be OK.
+The code is a bit involved when dealing with non-paged support. We do not use
+pages at all so pageSize is irrelevant and ends up being -1, which in unsigned
+arithmetic should be all 1's. However it is used to set the addresses in both
+paged and non- paged modes, so we may see some side-effects here. It should be
+worked a bit better but space is running out. In the devices, pages are always
+used when the memory is above a certain size, so 8-bit addressing should be OK.
 
 @param[in] size: Size of the transfer in bytes
 @param[in] mem:  Memory type ('E' or 'F')
@@ -609,18 +630,21 @@ unsigned char BlockLoad(uint16_t size, unsigned char mem, uint16_t *address)
         {
             if (ePageSize == 0)                             // Check Page Capability
             {
-                writeCommand(0xC0,0x00,lsbAddress,recchar());   // Get and write EEPROM byte direct
-                pollDelay(FALSE);                           // Long wait for completion of write command
+// Get and write EEPROM byte direct
+                writeCommand(0xC0,0x00,lsbAddress,recchar());
+                pollDelay(FALSE);   // Long wait for completion of write command
             }
             else
-                writeCommand(0xC1,0x00,lsbAddress,recchar());   // Get and write EEPROM byte to its page
+// Get and write EEPROM byte to its page
+                writeCommand(0xC1,0x00,lsbAddress,recchar());
             blockCount+=1;
         }
         else
         {
             writeCommand(0x40,0x00,lsbAddress,recchar());   // FLASH Low byte
             writeCommand(0x48,0x00,lsbAddress,recchar());   // FLASH High Byte
-            if (fPageSize == 0) pollDelay(TRUE);            // Short wait for completion of write command
+// Short wait for completion of write command
+            if (fPageSize == 0) pollDelay(TRUE);
             blockCount+=2;
         }
         (*address)++;                                       // Select next byte/word location.
@@ -632,13 +656,17 @@ unsigned char BlockLoad(uint16_t size, unsigned char mem, uint16_t *address)
             {
                 if (mem=='E')
                 {
-                    writeCommand(0xC2,high(pageAddress),low(pageAddress),0x00); // Commit EEPROM Page
-                    pollDelay(FALSE);                       // Long wait for completion of commit command
+// Commit EEPROM Page
+                    writeCommand(0xC2,high(pageAddress),low(pageAddress),0x00);
+// Long wait for completion of commit command
+                    pollDelay(FALSE);
                 }
                 else
                 {
-                    writeCommand(0x4C,high(pageAddress),low(pageAddress),0x00); // Commit FLASH Page
-                    pollDelay(TRUE);                        // Short wait for completion of commit command
+// Commit FLASH Page
+                    writeCommand(0x4C,high(pageAddress),low(pageAddress),0x00);
+// Short wait for completion of commit command
+                    pollDelay(TRUE);
                 }
                 pageAddress = (*address) & (~pageMask);     // next page
                 pageOffset = 0;                             // Restore counter for next page
@@ -649,21 +677,22 @@ unsigned char BlockLoad(uint16_t size, unsigned char mem, uint16_t *address)
     return '\r';
 }
 
-/***************************************************************************************/
+/*****************************************************************************/
 /** @brief Read a block from application memory
 
-There is no block read as such in the SPI interface, just do it byte by byte. This code
-allows the interface to reduce traffic by reading in a single transaction.
+There is no block read as such in the SPI interface, just do it byte by byte.
+This code allows the interface to reduce traffic by reading in a single
+transaction.
 
 Take care that EEPROM addresses are given in bytes, while FLASH addresses are
 in words.
 
-Note that the low byte is returned first, followed by the high byte. This differs
-from the 'R' command in which the high byte is returned first.
+Note that the low byte is returned first, followed by the high byte. This
+differs from the 'R' command in which the high byte is returned first.
 
 @param[in] size: Size of the buffer in bytes
 @param[in] mem:  Memory type ('E' or 'F')
-@param[in] *address: pointer to the memory address in bytes (EEPROM) or words (FLASH)
+@param[in] *address: pointer to memory address in bytes (EEPROM) or words (FLASH)
 */
 
 void BlockRead(unsigned int size, unsigned char mem, uint16_t *address)
@@ -687,7 +716,7 @@ void BlockRead(unsigned int size, unsigned char mem, uint16_t *address)
     }
 }
 
-/***************************************************************************************/
+/*****************************************************************************/
 /** @brief Write a Byte to the SPI
 
 Issue a write of a single byte on the SPI interface
@@ -717,13 +746,13 @@ uint8_t writeByte(const uint8_t datum)
     return response;
 }
 
-/***************************************************************************************/
+/*****************************************************************************/
 /** @brief Write a four byte Programming command to the SPI
 
 Issue a write command on the SPI interface
 This returns responses which (usually) match the command, one byte delayed.
-The third byte read from the "start programming" command can be used to verify sync.
-Other read commands return the read value in the fourth byte.
+The third byte read from the "start programming" command can be used to verify
+sync. Other read commands return the read value in the fourth byte.
 
 @param[in] cmd    SPI Programming command
 @param[in] parm1  SPI Programming parameter 1
@@ -732,34 +761,38 @@ Other read commands return the read value in the fourth byte.
 @returns The global buffer four bytes with the data returned from the command
 */
 
-void writeCommand(const uint8_t cmd, const uint8_t parm1, const uint8_t parm2, const uint8_t parm3)
+void writeCommand(const uint8_t cmd, const uint8_t parm1, const uint8_t parm2,
+                  const uint8_t parm3)
 {
     buffer[0] = writeByte(cmd);
     buffer[1] = writeByte(parm1);
     buffer[2] = writeByte(parm2);
     buffer[3] = writeByte(parm3);
 }
-/***************************************************************************************/
+/*****************************************************************************/
 /** @brief Delay loop for writes.
 
-The target capability for polling the busy status is used to determine if this is to be used
-or if a fixed delay is needed. The delay is passed in the parameter.
+The target capability for polling the busy status is used to determine if this
+is to be used or if a fixed delay is needed. The delay is passed in the
+parameter.
 
-The compiler has a problem with passing a parameter to _delay_ms, and memory usage bloats.
-So we need some fixed delays. Most likely _delay_us is too general and includes floats.
+The compiler has a problem with passing a parameter to _delay_ms, and memory
+usage bloats. So we need some fixed delays. Most likely _delay_us is too general
+and includes floats.
 
-Note the datasheet labels the flag as RDY, when in fact it states later that it is the inverse,
-BSY, that is, wait until the flag drops to 0 before proceeding.
+Note the datasheet labels the flag as RDY, when in fact it states later that it
+is the inverse, BSY, that is, wait until the flag drops to 0 before proceeding.
 
-@param[in] shortDelay  Is the delay short?: TRUE for FLASH (4.5ms) or FALSE for erase, EEPROM (9ms).
+@param[in] shortDelay  Is the delay short?: TRUE for FLASH (4.5ms) or FALSE for
+erase, EEPROM (9ms).
 */
 
 void pollDelay(const uint8_t shortDelay)
 {
     if (canCheckBusy)
     {
-        do writeCommand(0xF0,0x00,0x00,0x00);           // This needs several ms, so
-        while (buffer[3] & 0x01);                       // Wait for busy flag to drop
+        do writeCommand(0xF0,0x00,0x00,0x00);       // This needs several ms, so
+        while (buffer[3] & 0x01);                   // Wait for busy flag to drop
     }
     else
     {

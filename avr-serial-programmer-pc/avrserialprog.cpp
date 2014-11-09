@@ -48,8 +48,9 @@ mode, and with or without verification.
 #include "m48Dialog.h"
 #include "m8535Dialog.h"
 #include "m16Dialog.h"
-#include "t261Dialog.h"
 #include "t26Dialog.h"
+#include "t261Dialog.h"
+#include "t441Dialog.h"
 #include "t2313Dialog.h"
 #include "s2313Dialog.h"
 #include "serialport.h"
@@ -89,7 +90,7 @@ Lock and Fuse support is given by a bitwise quantity.
 7 = Extended Fuse Write
 */
 
-#define NUMPARTS 17
+#define NUMPARTS 19
 const uint part[NUMPARTS][6] = {
 /* Sig 2, Sig 3,   Type, EPage, Busy, Lock/Fuse */
 {   0x91,  0x01,   12313, 0,   FALSE,  0x10     },  // AT90S2313
@@ -101,10 +102,12 @@ const uint part[NUMPARTS][6] = {
 {   0x92,  0x07,   261,   4,   TRUE,   0xFF     },  // ATTiny44
 {   0x92,  0x05,   48,    4,   TRUE,   0xFF     },  // ATMega48
 {   0x92,  0x08,   261,   4,   TRUE,   0xFF     },  // ATTiny461
+{   0x92,  0x15,   441,   4,   TRUE,   0xFF     },  // ATTiny441
 {   0x93,  0x0C,   261,   4,   TRUE,   0xFF     },  // ATTiny84
 {   0x93,  0x08,   8535,  0,   FALSE,  0x77     },  // ATMega8535
 {   0x93,  0x0A,   88,    4,   TRUE,   0xFF     },  // ATMega88
 {   0x93,  0x0D,   261,   4,   TRUE,   0xFF     },  // ATTiny861
+{   0x93,  0x15,   441,   4,   TRUE,   0xFF     },  // ATTiny841
 {   0x94,  0x03,   16,    4,   TRUE,   0x77     },  // ATMega16
 {   0x94,  0x06,   88,    4,   TRUE,   0xFF     },  // ATMega168
 {   0x95,  0x0F,   328,   4,   TRUE,   0xFF     },  // ATMega328
@@ -120,10 +123,12 @@ const QString partName[NUMPARTS] = {
 "ATTiny44",
 "ATMega48",
 "ATTiny461",
+"ATTiny441",
 "ATTiny84",
 "ATMega8535",
 "ATMega88",
 "ATTiny861",
+"ATTiny841",
 "ATMega16",
 "ATMega168",
 "ATMega328",
@@ -422,7 +427,7 @@ void AvrSerialProg::on_lockFuseButton_clicked()
         m328DialogForm->setDefaults(lockBits,extFuseBits,highFuseBits,fuseBits);
         m328DialogForm->exec();
     }
-    if (partType == 88)
+    else if (partType == 88)
     {
         M88Dialog* m88DialogForm = new M88Dialog(port,this);
         m88DialogForm->setDefaults(lockBits,extFuseBits,highFuseBits,fuseBits);
@@ -451,6 +456,12 @@ void AvrSerialProg::on_lockFuseButton_clicked()
         T261Dialog* t261DialogForm = new T261Dialog(port,this);
         t261DialogForm->setDefaults(lockBits,extFuseBits,highFuseBits,fuseBits);
         t261DialogForm->exec();
+    }
+    else if (partType == 441)
+    {
+        T441Dialog* t441DialogForm = new T441Dialog(port,this);
+        t441DialogForm->setDefaults(lockBits,extFuseBits,highFuseBits,fuseBits);
+        t441DialogForm->exec();
     }
     else if (partType == 26)
     {
