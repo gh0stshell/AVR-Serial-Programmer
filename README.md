@@ -15,9 +15,23 @@ with the reset pin asserted. Versions of firmware are provided for the
 ATTiny2313 and ATTiny4313. The former is deprecated. The latter is needed to
 handle the increasing number of AVR target types.
 
-A GUI is provided. This reads the AVR fuse bits and signature bits and adapts
-the GUI configuration to the detected microcontroller type. The GUI may be used
-directly with a bootloader following the AVR109 command interface.
+A Linux GUI is provided. This reads the AVR fuse bits and signature bits and
+adapts the GUI configuration to the detected microcontroller type. The GUI may
+be used directly with a bootloader following the AVR109 command interface.
+
+* Connect the 2-pin 5V DC power, noting the polarity is respected.
+* Connect a 4-wire serial cable to the PC either directly if the PC has a serial
+port, or via a serial-USB adapter. The default serial port is /dev/ttyUSB0
+appropriate for the adapter. The -P command line switch allows another port to
+be defined, such as /dev/ttyS0 for the PC's serial port.
+* Connect the 6-pin programming cable to the target.
+
+The GUI when invoked should show the target AVR processor type plus a number of
+additional details. If the serial port is incorrect the GUI will try out a
+number of baud rates and close.
+
+Take care when changing the lock/fuse bits as this can brick the processor if
+done incorrectly.
 
 More information is provided at:
 
