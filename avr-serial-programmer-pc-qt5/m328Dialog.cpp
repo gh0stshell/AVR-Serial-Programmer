@@ -32,7 +32,7 @@ ATMega328
  ***************************************************************************/
 
 #include "m328Dialog.h"
-#include "serialport.h"
+#include <QSerialPort>
 #include <QString>
 #include <QLabel>
 #include <QMessageBox>
@@ -49,7 +49,7 @@ ATMega328
 @param parent Parent widget.
 */
 
-M328Dialog::M328Dialog(SerialPort* p, QWidget* parent) : QDialog(parent)
+M328Dialog::M328Dialog(QSerialPort* p, QWidget* parent) : QDialog(parent)
 {
     port = p;
 // Build the User Interface display from the Ui class in ui_mainwindowform.h

@@ -28,7 +28,7 @@ programming. This applies to the ATTiny261/461/861.
  ***************************************************************************/
 
 #include "t26Dialog.h"
-#include "serialport.h"
+#include <QSerialPort>
 #include <QString>
 #include <QLabel>
 #include <QMessageBox>
@@ -45,7 +45,7 @@ programming. This applies to the ATTiny261/461/861.
 @param parent Parent widget.
 */
 
-T26Dialog::T26Dialog(SerialPort* p, QWidget* parent) : QDialog(parent)
+T26Dialog::T26Dialog(QSerialPort* p, QWidget* parent) : QDialog(parent)
 {
     port = p;
 // Build the User Interface display from the Ui class in ui_mainwindowform.h

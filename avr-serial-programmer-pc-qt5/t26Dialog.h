@@ -29,7 +29,7 @@ Title:    Atmel Microcontroller Serial Port FLASH loader. T26 Lock/Fuse bits
 #define _TTY_POSIX_         // Need to tell qextserialport we are in POSIX
 
 #include "ui/ui_t26Dialog.h"
-#include "serialport.h"
+#include <QSerialPort>
 #include <QDialog>
 #include <QCloseEvent>
 
@@ -43,7 +43,7 @@ class T26Dialog : public QDialog
 {
     Q_OBJECT
 public:
-    T26Dialog(SerialPort*, QWidget* parent = 0);
+    T26Dialog(QSerialPort*, QWidget* parent = 0);
     ~T26Dialog();
     void setDefaults(uchar l, uchar h, uchar f);
 private slots:
@@ -53,7 +53,7 @@ private slots:
     void on_highFuseWriteButton_clicked();
     void on_fuseWriteButton_clicked();
 private:
-    SerialPort* port;           //!< Serial port object pointer
+    QSerialPort* port;           //!< Serial port object pointer
     uchar lockBitsOriginal;
     uchar extFuseBitsOriginal;
     uchar highFuseBitsOriginal;

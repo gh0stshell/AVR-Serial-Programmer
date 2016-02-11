@@ -28,7 +28,7 @@ programming. This applies to the ATMega8535.
  ***************************************************************************/
 
 #include "m8535Dialog.h"
-#include "serialport.h"
+#include <QSerialPort>
 #include <QString>
 #include <QLabel>
 #include <QMessageBox>
@@ -45,7 +45,7 @@ programming. This applies to the ATMega8535.
 @param parent Parent widget.
 */
 
-M8535Dialog::M8535Dialog(SerialPort* p, QWidget* parent) : QDialog(parent)
+M8535Dialog::M8535Dialog(QSerialPort* p, QWidget* parent) : QDialog(parent)
 {
     port = p;
 // Build the User Interface display from the Ui class in ui_mainwindowform.h

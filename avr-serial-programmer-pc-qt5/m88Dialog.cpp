@@ -29,7 +29,7 @@ ATMega88, ATMega168
  ***************************************************************************/
 
 #include "m88Dialog.h"
-#include "serialport.h"
+#include <QSerialPort>
 #include <QString>
 #include <QLabel>
 #include <QMessageBox>
@@ -46,7 +46,7 @@ ATMega88, ATMega168
 @param parent Parent widget.
 */
 
-M88Dialog::M88Dialog(SerialPort* p, QWidget* parent) : QDialog(parent)
+M88Dialog::M88Dialog(QSerialPort* p, QWidget* parent) : QDialog(parent)
 {
     port = p;
 // Build the User Interface display from the Ui class in ui_mainwindowform.h

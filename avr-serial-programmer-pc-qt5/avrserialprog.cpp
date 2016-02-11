@@ -42,6 +42,25 @@ mode, and with or without verification.
 // Specify an intercharacter timeout when receiving incoming communications
 #define TIMEOUTCOUNT 100000
 
+#include <QApplication>
+#include <QString>
+#include <QByteArray>
+#include <QLineEdit>
+#include <QLabel>
+#include <QMessageBox>
+#include <QFileDialog>
+#include <QFileInfo>
+#include <QSerialPort>
+#include <QSerialPortInfo>
+#include <QDir>
+#include <QFile>
+#include <QTextEdit>
+#include <QCloseEvent>
+#include <QDebug>
+#include <QBasicTimer>
+#include <cstdlib>
+#include <unistd.h>
+#include <iostream>
 #include "avrserialprog.h"
 #include "m328Dialog.h"
 #include "m88Dialog.h"
@@ -53,22 +72,6 @@ mode, and with or without verification.
 #include "t441Dialog.h"
 #include "t2313Dialog.h"
 #include "s2313Dialog.h"
-#include "serialport.h"
-#include <QApplication>
-#include <QString>
-#include <QLineEdit>
-#include <QLabel>
-#include <QMessageBox>
-#include <QFileDialog>
-#include <QDir>
-#include <QFile>
-#include <QTextEdit>
-#include <QCloseEvent>
-#include <QDebug>
-#include <QBasicTimer>
-#include <cstdlib>
-#include <unistd.h>
-#include <iostream>
 
 #define IDLE_CHAR 0xDD
 #define SYNC_CHAR 0x67
@@ -134,6 +137,8 @@ const QString partName[NUMPARTS] = {
 "ATMega328",
 "ATMega32"
 };
+
+const qint32 bauds[8] = {1200,2400,4800,9600,19200,38400,57600,115200};
 //-----------------------------------------------------------------------------
 /** Constructor
 
@@ -145,10 +150,10 @@ retrieved.
 @param[in] parent Parent widget.
 */
 
-AvrSerialProg::AvrSerialProg(SerialPort* p, uint initialBaudrate,bool commandLine,
+AvrSerialProg::AvrSerialProg(QString* p, uint initialBaudrate,bool commandLine,
                               bool debug,QWidget* parent): QDialog(parent)
 {
-    port = p;
+    port = new QSerialPort(*p);
     commandLineOnly = commandLine;
     debugMode = debug;
     if (debugMode) qDebug() << "Debug Mode";
@@ -976,8 +981,7 @@ bool AvrSerialProg::initializeProgrammer(uint initialBaudrate)
     synchronized = false;
     bool sentOK = false;        // Tracks communication integrity
 /** Setup port for transmission */
-    sentOK = port->initPort(initialBaudrate,100);
-    if (debugMode) qDebug() << "Initialized";
+    sentOK = port->open(QIODevice::ReadWrite);
     if (! sentOK)
     {
         errorMessage = QString("Unable to initialize the serial port.\n"
@@ -985,6 +989,12 @@ bool AvrSerialProg::initializeProgrammer(uint initialBaudrate)
                                "You may (but shouldn't) need root privileges.");
         return false;
     }
+    port->setBaudRate(bauds[initialBaudrate]);
+    port->setDataBits(QSerialPort::Data8);
+    port->setParity(QSerialPort::NoParity);
+    port->setStopBits(QSerialPort::OneStop);
+    port->setFlowControl(QSerialPort::NoFlowControl);
+    if (debugMode) qDebug() << "Initialized";
 /** Attempt to synchronize the baudrate and establish the bootloader presence.*/
     sentOK = syncProgrammer(port,initialBaudrate);
     if (! sentOK)
@@ -1188,7 +1198,7 @@ is limited.
 @returns true if the synchronization was successful.
 */
 
-bool AvrSerialProg::syncProgrammer(SerialPort* port,
+bool AvrSerialProg::syncProgrammer(QSerialPort* port,
                                    const uchar initBaudrate)
 {
     bool ok;
@@ -1242,8 +1252,7 @@ application still responding. Keep searching for the bootloader response.*/
 
         if (unsynched)              // If timeout or bad character
         {
-            port->close();          // Close port for reinitialization
-            port->initPort(++baudrate,100);  // Retry with new baudrate
+            port->setBaudRate(++baudrate);  // Retry with new baudrate
             if (--attempts == 0)    // limit attempts to two cycles through
                 return false;
         }
@@ -1270,9 +1279,8 @@ bootloader is present. Use a simple command with known reply.*/
             qDebug() << "Not a bootloader response";
         }
     }
-    port->close();                  // Close port for reinitialization
     if (debugMode) qDebug() << "Baudrate index found " << baudrate;
-    port->initPort(baudrate,100);    // Reopen with minimal timeout
+    port->setBaudRate(baudrate);  // Retry with new baudrate
     return true;
 }
 //-----------------------------------------------------------------------------

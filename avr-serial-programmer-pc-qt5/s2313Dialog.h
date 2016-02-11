@@ -29,7 +29,7 @@ Title:    Atmel Microcontroller Serial Port FLASH loader. S2313 Lock/Fuse bits
 #define _TTY_POSIX_         // Need to tell qextserialport we are in POSIX
 
 #include "ui/ui_s2313Dialog.h"
-#include "serialport.h"
+#include <QSerialPort>
 #include <QDialog>
 #include <QCloseEvent>
 
@@ -43,14 +43,14 @@ class S2313Dialog : public QDialog
 {
     Q_OBJECT
 public:
-    S2313Dialog(SerialPort*, QWidget* parent = 0);
+    S2313Dialog(QSerialPort*, QWidget* parent = 0);
     ~S2313Dialog();
     void setDefaults();
 private slots:
     void on_closeButton_clicked();
     void on_lockWriteButton_clicked();
 private:
-    SerialPort* port;           //!< Serial port object pointer
+    QSerialPort* port;           //!< Serial port object pointer
     uchar lockBitsOriginal;
     char inBuffer[10];
 // User Interface object

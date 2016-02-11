@@ -28,7 +28,7 @@ programming. This applies to the ATTiny2313.
  ***************************************************************************/
 
 #include "t2313Dialog.h"
-#include "serialport.h"
+#include <QSerialPort>
 #include <QString>
 #include <QLabel>
 #include <QMessageBox>
@@ -45,7 +45,7 @@ programming. This applies to the ATTiny2313.
 @param parent Parent widget.
 */
 
-T2313Dialog::T2313Dialog(SerialPort* p, QWidget* parent) : QDialog(parent)
+T2313Dialog::T2313Dialog(QSerialPort* p, QWidget* parent) : QDialog(parent)
 {
     port = p;
 // Build the User Interface display from the Ui class in ui_mainwindowform.h

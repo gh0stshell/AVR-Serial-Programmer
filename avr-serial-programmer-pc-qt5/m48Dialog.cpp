@@ -28,7 +28,7 @@ programming. This applies to the ATMega48.
  ***************************************************************************/
 
 #include "m48Dialog.h"
-#include "serialport.h"
+#include <QSerialPort>
 #include <QString>
 #include <QLabel>
 #include <QMessageBox>
@@ -45,7 +45,7 @@ programming. This applies to the ATMega48.
 @param parent Parent widget.
 */
 
-M48Dialog::M48Dialog(SerialPort* p, QWidget* parent) : QDialog(parent)
+M48Dialog::M48Dialog(QSerialPort* p, QWidget* parent) : QDialog(parent)
 {
     port = p;
 // Build the User Interface display from the Ui class in ui_mainwindowform.h

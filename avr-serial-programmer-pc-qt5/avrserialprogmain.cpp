@@ -24,9 +24,9 @@ programmer, typically one that uses the SPI interface.
 The serial interface is a USB port to which a USB to Serial adaptor is connected.
 
 @note
-Compiler: gcc (Ubuntu 4.6.1-4ubuntu9) 4.6.1
+Compiler: gcc (Ubuntu)
 @note
-Uses: Qt version 4.7.4
+Uses: Qt version 5.2.1
 
 @todo Add a feature to allow the serial interface to be selected and tested.
 @todo Add support for s-record (which can program memories > 64K).
@@ -53,14 +53,14 @@ Uses: Qt version 4.7.4
  *   51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA.              *
  ***************************************************************************/
 
-#include <unistd.h>
-#include "avrserialprog.h"
-#include "serialport.h"
 #include <QApplication>
 #include <QMessageBox>
 #include <QDebug>
+#include <unistd.h>
+#include "avrserialprog.h"
+#include "serialport.h"
 
-#define SERIAL_PORT "/dev/ttyUSB0"
+#define SERIAL_PORT "ttyUSB0"
 
 //-----------------------------------------------------------------------------
 /** @brief Serial Programmer Main Program
@@ -72,7 +72,7 @@ this is successful, the window is opened for use.
 
 int main(int argc,char ** argv)
 {
-    QString inPort = SERIAL_PORT;
+    QString serialPort = SERIAL_PORT;
     int c;
     uint initialBaudrate = 3; //!< Baudrate index to start searching
     int baudParm;
@@ -107,7 +107,7 @@ int main(int argc,char ** argv)
             endAddress = QString(optarg).toInt(&ok,16);
             break;
         case 'P':
-            inPort = optarg;
+            serialPort = optarg;
             break;
         case 'n':
             commandLineOnly = true;
@@ -149,8 +149,7 @@ int main(int argc,char ** argv)
     }
 
     QApplication application(argc,argv);
-    SerialPort port(inPort);
-    AvrSerialProg serialProgrammer(&port,initialBaudrate,commandLineOnly,debug);
+    AvrSerialProg serialProgrammer(&serialPort,initialBaudrate,commandLineOnly,debug);
     if (! commandLineOnly)
     {
         if (serialProgrammer.success())

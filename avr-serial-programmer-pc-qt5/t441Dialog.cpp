@@ -28,7 +28,7 @@ programming. This applies to the ATTiny441/841.
  ***************************************************************************/
 
 #include "t441Dialog.h"
-#include "serialport.h"
+#include <QSerialPort>
 #include <QString>
 #include <QLabel>
 #include <QMessageBox>
@@ -45,7 +45,7 @@ programming. This applies to the ATTiny441/841.
 @param parent Parent widget.
 */
 
-T441Dialog::T441Dialog(SerialPort* p, QWidget* parent) : QDialog(parent)
+T441Dialog::T441Dialog(QSerialPort* p, QWidget* parent) : QDialog(parent)
 {
     port = p;
 // Build the User Interface display from the Ui class in ui_mainwindowform.h

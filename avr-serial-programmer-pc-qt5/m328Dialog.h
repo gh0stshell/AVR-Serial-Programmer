@@ -31,7 +31,7 @@ The fuse bits are the same as the m88/m168 but in a different order (rabbits!!)
 #define _TTY_POSIX_         // Need to tell qextserialport we are in POSIX
 
 #include "ui/ui_m328Dialog.h"
-#include "serialport.h"
+#include <QSerialPort>
 #include <QDialog>
 #include <QCloseEvent>
 
@@ -45,7 +45,7 @@ class M328Dialog : public QDialog
 {
     Q_OBJECT
 public:
-    M328Dialog(SerialPort*, QWidget* parent = 0);
+    M328Dialog(QSerialPort*, QWidget* parent = 0);
     ~M328Dialog();
     void setDefaults(uchar l, uchar e, uchar h, uchar f);
 private slots:
@@ -56,7 +56,7 @@ private slots:
     void on_highFuseWriteButton_clicked();
     void on_fuseWriteButton_clicked();
 private:
-    SerialPort* port;           //!< Serial port object pointer
+    QSerialPort* port;           //!< Serial port object pointer
     uchar lockBitsOriginal;
     uchar extFuseBitsOriginal;
     uchar highFuseBitsOriginal;

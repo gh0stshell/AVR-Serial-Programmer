@@ -28,12 +28,12 @@ Title:    Atmel Microcontroller Serial Port FLASH loader
 #define AVR_SERIAL_PROG_H
 #define _TTY_POSIX_         // Need to tell qextserialport we are in POSIX
 
-#include "ui_avrserialprog.h"
-#include "serialport.h"
 #include <QDialog>
 #include <QCloseEvent>
 #include <QDir>
 #include <QFile>
+#include <QSerialPort>
+#include "ui_avrserialprog.h"
 
 //-----------------------------------------------------------------------------
 /** @brief AVR Serial Programmer Control Window.
@@ -68,7 +68,7 @@ class AvrSerialProg : public QDialog
 {
     Q_OBJECT
 public:
-    AvrSerialProg(SerialPort*, uint initialBaudrate,bool commandLine,
+    AvrSerialProg(QString*, uint initialBaudrate,bool commandLine,
                         bool debug,QWidget* parent = 0);
     ~AvrSerialProg();
     bool success();
@@ -104,7 +104,7 @@ private:
     bool verifyPage(const uchar* blockBuffer,
                     const uint blockLength,
                     const uint address, const uchar memType);
-    bool syncProgrammer(SerialPort* port,const uchar baudrate);
+    bool syncProgrammer(QSerialPort* port,const uchar baudrate);
     bool resyncProgrammer();
     bool setProgrammingMode();
     bool leaveProgrammingMode();
@@ -127,7 +127,7 @@ private:
 // User Interface object
     Ui::BootloaderDialog bootloaderFormUi;
 
-    SerialPort* port;           //!< Serial port object pointer
+    QSerialPort* port;          //!< Serial port object pointer
     bool synchronized;          //!< Synchronization status
     QString errorMessage;       //!< Messages for the calling application
     QDir saveDirectory;

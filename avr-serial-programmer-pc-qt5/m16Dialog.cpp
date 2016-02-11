@@ -28,7 +28,7 @@ and programming. This applies to the ATMega16.
  ***************************************************************************/
 
 #include "m16Dialog.h"
-#include "serialport.h"
+#include <QSerialPort>
 #include <QString>
 #include <QLabel>
 #include <QMessageBox>
@@ -45,7 +45,7 @@ and programming. This applies to the ATMega16.
 @param parent Parent widget.
 */
 
-M16Dialog::M16Dialog(SerialPort* p, QWidget* parent) : QDialog(parent)
+M16Dialog::M16Dialog(QSerialPort* p, QWidget* parent) : QDialog(parent)
 {
     port = p;
 // Build the User Interface display from the Ui class in ui_mainwindowform.h

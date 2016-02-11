@@ -28,7 +28,7 @@ programming. This applies to the AT90S2313.
  ***************************************************************************/
 
 #include "s2313Dialog.h"
-#include "serialport.h"
+#include <QSerialPort>
 #include <QString>
 #include <QLabel>
 #include <QMessageBox>
@@ -45,7 +45,7 @@ programming. This applies to the AT90S2313.
 @param parent Parent widget.
 */
 
-S2313Dialog::S2313Dialog(SerialPort* p, QWidget* parent) : QDialog(parent)
+S2313Dialog::S2313Dialog(QSerialPort* p, QWidget* parent) : QDialog(parent)
 {
     port = p;
 // Build the User Interface display from the Ui class in ui_mainwindowform.h

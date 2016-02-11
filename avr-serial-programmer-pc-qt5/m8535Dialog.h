@@ -29,7 +29,7 @@ Title:    Atmel Microcontroller Serial Port FLASH loader. M8535 Lock/Fuse bits
 #define _TTY_POSIX_         // Need to tell qextserialport we are in POSIX
 
 #include "ui/ui_m8535Dialog.h"
-#include "serialport.h"
+#include <QSerialPort>
 #include <QDialog>
 #include <QCloseEvent>
 
@@ -43,7 +43,7 @@ class M8535Dialog : public QDialog
 {
     Q_OBJECT
 public:
-    M8535Dialog(SerialPort*, QWidget* parent = 0);
+    M8535Dialog(QSerialPort*, QWidget* parent = 0);
     ~M8535Dialog();
     void setDefaults(uchar l, uchar h, uchar f);
 private slots:
@@ -53,7 +53,7 @@ private slots:
     void on_highFuseWriteButton_clicked();
     void on_fuseWriteButton_clicked();
 private:
-    SerialPort* port;           //!< Serial port object pointer
+    QSerialPort* port;           //!< Serial port object pointer
     uchar lockBitsOriginal;
     uchar extFuseBitsOriginal;
     uchar highFuseBitsOriginal;
