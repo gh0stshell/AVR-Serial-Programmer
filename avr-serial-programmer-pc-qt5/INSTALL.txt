@@ -1,0 +1,25 @@
+Basic Installation
+==================
+
+To use this, unpack into a directory which by default will be serial-programmer-pc.
+Obtain QextSerialPort v1.2beta1 or later from http://qextserialport.sourceforge.net/
+and unpack the tarball into the directory qextserialport. This directory can be
+changed in avrserialprog.pro. Make sure that you have QT4 installed. The project
+file is set to compile qextserialport into the serial programmer binary.
+
+Return to the serial-programmer-pc directory. The default serial port used is
+/dev/ttyUSB0 This can be changed in the command line. Execute:
+
+$ make clean
+$ qmake
+$ make
+
+This will build the application. Copy the binary to a suitable place and invoke with:
+
+$ avrserialprog
+
+A range of command line parameters are available for GUI-less usage (see the README).
+
+K. Sarkies
+29/4/2012
+
