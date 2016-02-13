@@ -40,7 +40,7 @@ mode, and with or without verification.
  ***************************************************************************/
 
 // Specify an intercharacter timeout when receiving incoming communications
-#define TIMEOUTCOUNT 100000
+#define TIMEOUTCOUNT 50
 
 #include <QApplication>
 #include <QString>
@@ -736,13 +736,16 @@ block is sent, it starts and ends on a single page boundary. This requires
 some gymnastics in regard to watching the address counter, identifying gaps, and
 ensuring that they are taken into account.
 
-Note also that the 16 bit words are stored MSB first in the buffer and in the target.
+Note also that the 16 bit words are stored MSB first in the buffer and in the
+target.
 
 @param[in] upload Boolean indicating if an upload is to be done.
-@param[in] verify Boolean indicating if a verification is to be done (exclusively or after upload).
+@param[in] verify Boolean indicating if a verification is to be done
+           (exclusively or after upload).
 @param[out] errorMessage Error message to print if any failure occurs.
 @param[in] file File already opened for loading.
-@param[in] memType 'F' indicates flash memory, and 'E' indicates EEPROM. Passed to lower routines
+@param[in] memType 'F' indicates flash memory, and 'E' indicates EEPROM.
+           Passed to lower routines
 @returns boolean indicating if an error occurred.
 */
 
@@ -761,10 +764,11 @@ bool AvrSerialProg::loadHexCore(bool upload, bool verify, QString* errorMessage,
 /** If a program operation is requested, erase the application memory and open
 the file stream (this will erase lock bits if not accessing a bootloader).*/
             if (debugMode) qDebug() << "Start Chip Erase";
-            port->putChar('e');                 // erase all application memory
+            port->putChar('e');             // erase all application memory
+            qApp->processEvents();          // Allow send and receive to occur
             int numBytes = 0;
-            while (numBytes == 0)               // Give it more time - it may be long
-                numBytes = checkCommand(1);     // We could get stuck here!
+            while (numBytes == 0)           // Give it more time - it may be long
+                numBytes = checkCommand(1); // We could get stuck here!
             *errorMessage = "Erase Fail";
             sentOK = readPort(inBuffer,numBytes);
             if (debugMode) qDebug() << "Finish Chip Erase";
@@ -785,7 +789,8 @@ the file stream (this will erase lock bits if not accessing a bootloader).*/
             while (! stream.atEnd() && sentOK && verifyOK)
             {
               	QString line = stream.readLine();
-/** Interpret the Intel Hex format line to get line length, record type and address.*/
+/** Interpret the Intel Hex format line to get line length, record type and
+address.*/
                	uint lineLength = line.mid(1,2).toUInt(&ok,16);
                	uint address = (line.mid(3,4).toUInt(&ok,16));
                	uint recordType = line.mid(7,2).toUInt(&ok,16);
@@ -904,11 +909,13 @@ written OK, bump the start address to the next page and reset the buffer. */
 @param[in] blockLength uint length of AVR read.
 @param[out] errorMessage Error message to print if any failure occurs.
 @param[in] file File already opened for writing.
-@param[in] memType 'F' indicates flash memory, and 'E' indicates EEPROM. Passed to lower routines
+@param[in] memType 'F' indicates flash memory, and 'E' indicates EEPROM. Passed
+           to lower routines
 @returns boolean indicating if an error occurred.
 */
 
-bool AvrSerialProg::readHexCore(uint startAddress, uint blockLength, QString* errorMessage,
+bool AvrSerialProg::readHexCore(uint startAddress, uint blockLength,
+                                QString* errorMessage,
                                 QFile* file, const uchar memType)
 {
     int progress=0;
@@ -1002,6 +1009,7 @@ bool AvrSerialProg::initializeProgrammer(uint initialBaudrate)
         errorMessage = QString("Unable to synchronize the device");
         return false;
     }
+    if (debugMode) qDebug() << "Synchronized";
 /** Proceed to verify the bootloader and pull in some information about its
 capabilities. In the GUI the autoAddress and block mode capabilities are
 used to set checkboxes that can be modified by the user before uploading a
@@ -1009,13 +1017,16 @@ file. This allows blockmode to be turned off if desired. */
     sentOK = leaveProgrammingMode();
     if (! sentOK)
     {
+        if (debugMode) qDebug() << "Failed to leave Programming Mode.";
         errorMessage = "Unable to leave Programming Mode";
         return false;
     }
+    if (debugMode) qDebug() << "Left Programming Mode";
     synchronized = true;
     sentOK = getVersion(identifier);
     if (! sentOK)
     {
+        if (debugMode) qDebug() << "Failed to get Programmer Identifier.";
         errorMessage = "Unable to get Programmer Identifier";
         return false;
     }
@@ -1023,13 +1034,17 @@ file. This allows blockmode to be turned off if desired. */
     sentOK = setProgrammingMode();
     if (! sentOK)
     {
+        if (debugMode)
+            qDebug() << "Failed to enter Programming Mode. Check Target hardware and connections.";
         errorMessage = "Programming Mode Failed";
         return false;
     }
+    if (debugMode) qDebug() << "Entered Programming Mode.";
 // Issue a signature read request
     sentOK = getSignature(signatureArray);
     if (! sentOK)
     {
+        if (debugMode) qDebug() << "Failed to get Signature Bytes.";
         errorMessage = "Unable to get Signature Bytes";
         return false;
     }
@@ -1058,6 +1073,7 @@ file. This allows blockmode to be turned off if desired. */
     sentOK = getLockFuse(lockFuse,lockBits,fuseBits,highFuseBits,extFuseBits);
     if (! sentOK)
     {
+        if (debugMode) qDebug() << "Failed to get Fuse/Lock Bytes.";
         errorMessage = "Unable to get Fuse/Lock Bytes";
         return false;
     }
@@ -1065,6 +1081,7 @@ file. This allows blockmode to be turned off if desired. */
     sentOK = getAutoAddress(autoincrement);
     if (! sentOK)
     {
+        if (debugMode) qDebug() << "Failed to get Autoincrement Capability.";
         errorMessage = "Unable to get Autoincrement Capability";
         return false;
     }
@@ -1072,6 +1089,7 @@ file. This allows blockmode to be turned off if desired. */
     sentOK = getBlockSupport(blockSupport,pageSize);
     if (! sentOK)
     {
+        if (debugMode) qDebug() << "Failed to get Block Support Capability.";
         errorMessage = "Unable to get Block Support Capability";
         return false;
     }
@@ -1211,20 +1229,25 @@ bool AvrSerialProg::syncProgrammer(QSerialPort* port,
     if (debugMode) qDebug() << "Attempt Programmer Synchronization";
     while (unsynched)
     {
+        if (debugMode) qDebug() << "Trying BaudRate" << bauds[baudrate];
 /** The IDLE character would be recognised by the acquisition program, so if
 an IDLE comes back we are probably in that program. However the bootloader if
 present will respond with a "?", so we are probably there.*/
-        ok = port->putChar(IDLE_CHAR); // Issue an IDLE character
+        int checkBytes = 0;             // Check if any response received
+        ok = port->putChar(IDLE_CHAR);  // Issue an IDLE character
         timeout = TIMEOUTCOUNT;
-        int checkBytes = 0;    // Check if any response received
         while ((--timeout > 0) && (checkBytes <= 0))
+        {
+            qApp->processEvents();          // Allow send and receive to occur
             checkBytes = port->bytesAvailable();
+            usleep(1000);
+        }
         uint numBytes = checkBytes;
-        if (checkBytes > 0)       // If we received something
+        if (checkBytes > 0)             // If we received something
         {
 			if (debugMode) qDebug() << QString("Received %1 Bytes").arg(checkBytes,2,16);
             port->read(inBuffer,numBytes);
-			if (debugMode) qDebug() << QString("Character %1").arg((uchar)inBuffer[0],2,16);
+			if (debugMode) qDebug() << QString("First Character %1").arg((uchar)inBuffer[0],2,16);
             if ((uchar)inBuffer[0] == IDLE_CHAR)
             {
 /** A response means the acquisition application is running, therefore try to
@@ -1242,6 +1265,7 @@ application still responding. Keep searching for the bootloader response.*/
                     port->putChar(0x40);
                     port->putChar(0x41);
                     port->putChar(EOM_CHAR);
+                    qApp->processEvents();      // Allow send and receive to occur
                     baudrate = initBaudrate;
                 }
             }
@@ -1250,23 +1274,28 @@ application still responding. Keep searching for the bootloader response.*/
         }
         else qDebug() << "Timeout";
 
-        if (unsynched)              // If timeout or bad character
+        if (unsynched)                  // If timeout or bad character
         {
-            port->setBaudRate(++baudrate);  // Retry with new baudrate
-            if (--attempts == 0)    // limit attempts to two cycles through
+            if (baudrate++ > 6) baudrate = 0;
+            port->setBaudRate(bauds[baudrate]);  // Retry with new baudrate
+            if (--attempts == 0)        // limit attempts to two cycles
                 return false;
         }
 /** If an apparent valid bootloader response arrives, need to check that the
 bootloader is present. Use a simple command with known reply.*/
         else
         {
-            port->putChar('a');     // Issue a autoaddress confirm request
-            timeout = 10000;
-            int checkBytes = 0;    // Check if any response received
+            port->putChar('a');         // Issue a autoaddress confirm request
+            timeout = TIMEOUTCOUNT;
+            int checkBytes = 0;         // Check if any response received
             while ((--timeout > 0) && (checkBytes <= 0))
+            {
+                qApp->processEvents();  // Allow send and receive to occur
                 checkBytes = port->bytesAvailable();
+                usleep(1000);
+            }
             uint numBytes = checkBytes;
-            if (checkBytes > 0)       // If we received something
+            if (checkBytes > 0)         // If we received something
             {
 				if (debugMode) qDebug() << QString("Bootloader test: Received %1 Bytes")
                                                    .arg(checkBytes,2,16);
@@ -1279,8 +1308,7 @@ bootloader is present. Use a simple command with known reply.*/
             qDebug() << "Not a bootloader response";
         }
     }
-    if (debugMode) qDebug() << "Baudrate index found " << baudrate;
-    port->setBaudRate(baudrate);  // Retry with new baudrate
+    if (debugMode) qDebug() << "Baudrate found " << bauds[baudrate];
     return true;
 }
 //-----------------------------------------------------------------------------
@@ -1298,8 +1326,12 @@ bool AvrSerialProg::resyncProgrammer()
 {
     char inBuffer[256];                 // Buffer for serial read
     for (uchar n=0; n<64;++n)
+    {
         port->putChar(0x1B);            // Spew out ESC characters
+        qApp->processEvents();          // Allow send and receive to occur
+    }
     port->putChar('a');                 // Check with any command
+    qApp->processEvents();              // Allow send and receive to occur
     if (debugMode) qDebug() << "Sent <a>";
     int numBytes = checkCommand(1);
     return readPort(inBuffer,numBytes);
@@ -1312,7 +1344,8 @@ bool AvrSerialProg::resyncProgrammer()
 bool AvrSerialProg::setProgrammingMode()
 {
     char inBuffer[32];
-    port->putChar('P');                         // Leave programming mode
+    port->putChar('P');                 // Enter programming mode
+    qApp->processEvents();              // Allow send and receive to occur
     if (debugMode) qDebug() << "Sent <P>";
     int numBytes = checkCommand(1);
     bool sentOK = (numBytes > 0);
@@ -1332,13 +1365,16 @@ bool AvrSerialProg::setProgrammingMode()
 bool AvrSerialProg::leaveProgrammingMode()
 {
     char inBuffer[32];
-    port->putChar('L');                         // Leave programming mode
+    port->putChar('L');                 // Leave programming mode
+    qApp->processEvents();              // Allow send and receive to occur
+    if (debugMode) qDebug() << "Sent <L>";
     int numBytes = checkCommand(1);
     bool sentOK = (numBytes > 0);
     if(sentOK)
     {
         sentOK = readPort(inBuffer,numBytes);    // Pull in response (0x0D)
     }
+    qApp->processEvents();              // Allow send and receive to occur
     return sentOK;
 }
 
@@ -1351,6 +1387,7 @@ bool AvrSerialProg::leaveProgrammingMode()
 bool AvrSerialProg::getSignature(char* signature)
 {
     port->putChar('s');
+    qApp->processEvents();              // Allow send and receive to occur
     if (debugMode) qDebug() << "Sent <s>";
     int numBytes = checkCommand(3);
     bool sentOK = (numBytes == 3);
@@ -1387,7 +1424,8 @@ bool AvrSerialProg::getLockFuse(const uchar lockFuse, uchar& lockBits, uchar& fu
     extFuseBits = 0;
     if (lockFuse & 0x01)
     {
-        port->putChar('r');         // Issue a lock byte read  request
+        port->putChar('r');             // Issue a lock byte read  request
+        qApp->processEvents();          // Allow send and receive to occur
 	    if (debugMode) qDebug() << "Sent <r>";
         int numBytes = checkCommand(1);
         sentOK = (numBytes > 0);
@@ -1399,7 +1437,8 @@ bool AvrSerialProg::getLockFuse(const uchar lockFuse, uchar& lockBits, uchar& fu
     }
     if (lockFuse & 0x02)
     {
-        port->putChar('F');         // Issue a low Fuse byte read request
+        port->putChar('F');             // Issue a low Fuse byte read request
+        qApp->processEvents();          // Allow send and receive to occur
 	    if (debugMode) qDebug() << "Sent <F>";
         int numBytes = checkCommand(1);
         sentOK = (numBytes > 0);
@@ -1411,7 +1450,8 @@ bool AvrSerialProg::getLockFuse(const uchar lockFuse, uchar& lockBits, uchar& fu
     }
     if (lockFuse & 0x04)
     {
-        port->putChar('N');         // Issue a high Fuse byte read request
+        port->putChar('N');             // Issue a high Fuse byte read request
+        qApp->processEvents();          // Allow send and receive to occur
 	    if (debugMode) qDebug() << "Sent <N>";
         int numBytes = checkCommand(1);
         sentOK = (numBytes > 0);
@@ -1423,7 +1463,8 @@ bool AvrSerialProg::getLockFuse(const uchar lockFuse, uchar& lockBits, uchar& fu
     }
     if (lockFuse & 0x08)
     {
-        port->putChar('Q');         // Issue a extended Fuse byte read request
+        port->putChar('Q');             // Issue a extended Fuse byte read request
+        qApp->processEvents();          // Allow send and receive to occur
  	    if (debugMode) qDebug() << "Sent <Q>";
         int numBytes = checkCommand(1);
         sentOK = (numBytes > 0);
@@ -1446,6 +1487,7 @@ bool AvrSerialProg::getAutoAddress(bool& autoincrement)
 {
     char inBuffer[32];
     port->putChar('a');
+    qApp->processEvents();              // Allow send and receive to occur
     if (debugMode) qDebug() << "Sent <a>";
     int numBytes = checkCommand(1);
     bool sentOK = (numBytes > 0);
@@ -1465,6 +1507,7 @@ bool AvrSerialProg::getBlockSupport(bool& blockSupport, uint& pageSize)
 {
     char inBuffer[32];
     port->putChar('b');
+    qApp->processEvents();              // Allow send and receive to occur
     if (debugMode) qDebug() << "Sent <b>";
     int numBytes = checkCommand(3);
     bool sentOK = (numBytes > 0);
@@ -1485,14 +1528,16 @@ a "version" string and 2 version characters.
 bool AvrSerialProg::getVersion(QString& identifier)
 {
     char inBuffer[32];
-    port->putChar('S');       // Issue an ident command
+    port->putChar('S');                 // Issue an ident command
+    qApp->processEvents();              // Allow send and receive to occur
     if (debugMode) qDebug() << "Sent <S>";
     int numBytes = checkCommand(7);
     bool sentOK = (numBytes > 0);
     if(sentOK) sentOK = readPort(inBuffer,numBytes);
     inBuffer[7] = 0;
     identifier = (QString) inBuffer;
-    port->putChar('V');        // Issue a version command
+    port->putChar('V');                 // Issue a version command
+    qApp->processEvents();              // Allow send and receive to occur
     if (debugMode) qDebug() << "Sent <V>";
     numBytes = checkCommand(2);
     sentOK = (numBytes > 0);
@@ -1553,6 +1598,7 @@ bool AvrSerialProg::writePage(const uchar* blockBuffer,
             port->putChar(blockBuffer[index]);
             usleep(1000);       // Delay 1 ms to allow slow programmer to catch up
         }
+        qApp->processEvents();          // Allow send and receive to occur
 	    if (debugMode) qDebug() << "Sent <B> plus block of data";
         numBytes = checkCommand(1);
         writeOK = readPort(inBuffer,numBytes);
@@ -1578,6 +1624,7 @@ If it is larger, then the page will be overwritten.*/
             port->putChar('c');       	    // lower byte sent first
             uchar sendChar = blockBuffer[index++];
             port->putChar(sendChar);
+            qApp->processEvents();          // Allow send and receive to occur
 		    if (debugMode) qDebug() << "Sent <c> plus low byte";
             numBytes = checkCommand(1);
             writeOK = readPort(inBuffer,numBytes);
@@ -1586,6 +1633,7 @@ If it is larger, then the page will be overwritten.*/
             if (! writeOK) break;
             port->putChar('C');       	    // upper byte sent second
             port->putChar(blockBuffer[index++]);
+            qApp->processEvents();          // Allow send and receive to occur
 		    if (debugMode) qDebug() << "Sent <C> plus high byte";
             numBytes = checkCommand(1);
             writeOK = readPort(inBuffer,numBytes);
@@ -1599,6 +1647,7 @@ If it is larger, then the page will be overwritten.*/
         {
             if (debugMode) qDebug() << "Commit Page to Flash";
             port->putChar('m');       	    // commit the page
+            qApp->processEvents();          // Allow send and receive to occur
 		    if (debugMode) qDebug() << "Sent <m>";
             numBytes = checkCommand(1);
             writeOK = readPort(inBuffer,numBytes);
@@ -1625,7 +1674,7 @@ bool AvrSerialProg::readPage(uchar* blockBuffer,
                              const uint blockLength,
                              const uint address, const uchar memType)
 {
-    char inBuffer[256];                     // Buffer for serial read
+    char inBuffer[256];                 // Buffer for serial read
     int numBytes = -1;
     bool readOK = sendAddress(address);
 //! The block mode checkbox can be used to control this behaviour.
@@ -1634,10 +1683,11 @@ bool AvrSerialProg::readPage(uchar* blockBuffer,
         if (debugMode) qDebug() << "Read Block from Target Flash Memory"
                                 << QString("%1").arg(blockLength,2,16,QLatin1Char('0'))
                                 << "Bytes";
-        port->putChar('g');	                // Read a block of Flash memory
+        port->putChar('g');	            // Read a block of Flash memory
         port->putChar((uchar) ((blockLength >> 8) & 0xFF));     //High Byte
         port->putChar((uchar) (blockLength & 0xFF));            // Low byte
-        port->putChar(memType);   	        // indicate flash memory
+        port->putChar(memType);   	    // indicate flash memory
+        qApp->processEvents();          // Allow send and receive to occur
 	    if (debugMode) qDebug() << "Sent <g> plus address and byte";
         numBytes = checkCommand(blockLength);
         readOK = (numBytes > 0);
@@ -1661,6 +1711,7 @@ Word comes as low first then high.*/
         while (bufferIndex < blockLength)
         {
             port->putChar('R');             // Read word
+            qApp->processEvents();          // Allow send and receive to occur
 		    if (debugMode) qDebug() << "Sent <R>";
             readOK = (checkCommand(2) == 2);
             if (! readOK)
@@ -1702,6 +1753,7 @@ bool AvrSerialProg::sendAddress(const uint address)
         port->putChar('A');             // address command
         port->putChar((uchar) ((wordAddress >> 8) & 0xFF));
         port->putChar((uchar) (wordAddress & 0xFF));
+        qApp->processEvents();          // Allow send and receive to occur
 	    if (debugMode) qDebug() << "Sent <V> plus address";
         int numBytes = checkCommand(1);
         sendOK = readPort(inBuffer,numBytes);
@@ -1733,6 +1785,7 @@ requested bytes have been read.
 
 bool AvrSerialProg::readPort(char* inBuffer, const int numBytes)
 {
+    qApp->processEvents();          // Allow send and receive to occur
     if ((numBytes == 0)) return false;
     port->read(inBuffer,numBytes);
     return !(inBuffer[0] == '?');
@@ -1756,6 +1809,9 @@ continues on. Make sure the timeout count is set to a high enough value to allow
 for slow links. You will be sure of this when the avr program uploads without
 errors.
 
+The value of 300ms is used for timeout to accomodate the programmer's attempts
+to enter programming mode, which will take over 250ms on failure.
+
 @param[in] expectedBytes: The number of bytes expected to be returned.
 @returns Number of bytes actually received (0 if timeout).
 */
@@ -1766,8 +1822,9 @@ int AvrSerialProg::checkCommand(const int expectedBytes)
     int numBytes = 0;               // Check if any response received
     int numBytesPrevious = 0;
     bool match = false;
-    while ((++timeout < TIMEOUTCOUNT) && (! match))
+    while ((++timeout < 300) && (! match))
     {
+        qApp->processEvents();      // Allow for received data to appear
         numBytes = port->bytesAvailable();
         if (expectedBytes > 0)
         {
@@ -1778,6 +1835,7 @@ int AvrSerialProg::checkCommand(const int expectedBytes)
         if (numBytes > numBytesPrevious)
             timeout = 0;            // Reset timeout as we are getting something
         numBytesPrevious = numBytes;
+        usleep(1000);
     }
     if (numBytes < 0) numBytes = 0;
     if (!match) qDebug() << "Check-Command Timeout" << numBytes
@@ -1797,6 +1855,7 @@ void AvrSerialProg::sendCommand(const char command)
     char inBuffer[16];
     int numBytes;
     port->putChar(command);
+    qApp->processEvents();          // Allow send and receive to occur
     if (debugMode) qDebug() << "Sent " << command;
     numBytes = checkCommand(1);
     readPort(inBuffer,numBytes);

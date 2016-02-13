@@ -58,7 +58,6 @@ Uses: Qt version 5.2.1
 #include <QDebug>
 #include <unistd.h>
 #include "avrserialprog.h"
-#include "serialport.h"
 
 #define SERIAL_PORT "ttyUSB0"
 
@@ -74,7 +73,7 @@ int main(int argc,char ** argv)
 {
     QString serialPort = SERIAL_PORT;
     int c;
-    uint initialBaudrate = 3; //!< Baudrate index to start searching
+    uint initialBaudrate = 5; //!< Baudrate index to start searching
     int baudParm;
     bool commandLineOnly = false;
     bool loadHex = false;
