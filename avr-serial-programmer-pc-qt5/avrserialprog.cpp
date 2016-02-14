@@ -1276,7 +1276,7 @@ application still responding. Keep searching for the bootloader response.*/
 
         if (unsynched)                  // If timeout or bad character
         {
-            if (baudrate++ > 6) baudrate = 0;
+            if (baudrate++ > 8) baudrate = 0;
             port->setBaudRate(bauds[baudrate]);  // Retry with new baudrate
             if (--attempts == 0)        // limit attempts to two cycles
                 return false;
