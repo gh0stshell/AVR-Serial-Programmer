@@ -33,9 +33,7 @@ number of baud rates and close.
 Take care when changing the lock/fuse bits as this can brick the processor if
 done incorrectly.
 
-More information is provided at:
-
-http://www.jiggerjuice.info/electronics/projects/serialprogrammer/firmware-bootloader.html
+More information is provided at [Jiggerjuice](http://www.jiggerjuice.info/electronics/projects/serialprogrammer/firmware-bootloader.html).
 
 (c) K. Sarkies 19/07/2014
 
