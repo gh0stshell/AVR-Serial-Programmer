@@ -1,5 +1,5 @@
 /**
-@mainpage Atmel Serial Programmer for AVR
+@mainpage Atmel Serial Programmer for AVR 4313 version
 @version 0.2
 @author Ken Sarkies (www.jiggerjuice.net)
 @date 15 January 2012
@@ -49,8 +49,7 @@ statement contains a recchar() call, move the latter out of the if to allow the
 protocol to complete correctly even if the capability is not supported.
 */
 /****************************************************************************
- *   Copyright (C) 2007 by Ken Sarkies                                      *
- *   ksarkies@trinity.asn.au                                                *
+ *   Copyright (C) 2007 by Ken Sarkies ksarkies@internode.on.net            *
  *                                                                          *
  *   This file is part of serial-programmer                                 *
  *                                                                          *
@@ -735,12 +734,13 @@ uint8_t writeByte(const uint8_t datum)
     for (uint8_t n=0; n < 8;  n++)
     {
         outb(PORTB,(inb(PORTB) & ~_BV(MOSI))|((value & 0x80)>>(7-MOSI)));// Shift data MSB and put to MISO pin
-        _delay_us(1);               // Give him some time to settle
+        _delay_us(SPI_DELAY);       // Give him some time to settle
         sbi(PORTB,SCK);             // Raise SCK to latch output data
-        _delay_us(1);               // Give him some time to settle
+        _delay_us(SPI_DELAY);       // Give him some time to settle
         response <<= 1;             // Prepare response for next input bit
         response |= (inb(PINB) & _BV(MISO))>>MISO;    // Add in next bit read
         cbi(PORTB,SCK);             // Drop SCK ready for next time
+        _delay_us(SPI_DELAY);       // Give him some time to settle
         value <<= 1;                // Move to expose next bit
     }
     return response;

@@ -1,5 +1,5 @@
 /**
-@mainpage Atmel Serial Programmer for AVR
+@mainpage Atmel Serial Programmer for AVR 2313 version
 @version 0.1
 @author Ken Sarkies (www.jiggerjuice.net)
 @date 14 November 2010
@@ -47,8 +47,7 @@ statement contains a recchar() call, move the latter out of the if to allow the
 protocol to complete correctly even if the capability is not supported.
 */
 /****************************************************************************
- *   Copyright (C) 2007 by Ken Sarkies                                      *
- *   ksarkies@trinity.asn.au                                                *
+ *   Copyright (C) 2007 by Ken Sarkies ksarkies@internode.on.net            *
  *                                                                          *
  *   This file is part of serial-programmer                                 *
  *                                                                          *

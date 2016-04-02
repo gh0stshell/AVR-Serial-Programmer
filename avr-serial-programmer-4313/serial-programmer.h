@@ -1,15 +1,35 @@
-/*****************************************************************************
-*           Serial Programmer for AVR
-*       Ken Sarkies ksarkies@trinity.asn.au
-*
-* File              : serial-programmer.h
-* Compiler          : AVR-GCC/avr-libc(>= 1.2.5)
-* Revision          : $Revision: 0.1 $
-* Updated by        : $ author K. Sarkies 14/11/2010 $
-*
-* Target platform   : AT90S2313 or ATTiny2313
-*
-****************************************************************************/
+/*          Serial Programmer for AVR 4313 version
+      Ken Sarkies ksarkies@internode.on.net
+            (www.jiggerjuice.net)
+
+File              : serial-programmer.h
+Compiler          : AVR-GCC/avr-libc(>= 1.2.5)
+Revision          : $Revision: 0.1 $
+Updated by        : $ author K. Sarkies 14/11/2010 $
+
+Target platform   : AT90S2313 or ATTiny2313
+*/
+
+/****************************************************************************
+ *   Copyright (C) 2007 by Ken Sarkies ksarkies@internode.on.net            *
+ *                                                                          *
+ *   This file is part of serial-programmer                                 *
+ *                                                                          *
+ *   serial-programmer is free software; you can redistribute it and/or     *
+ *   modify it under the terms of the GNU General Public License as         *
+ *   published by the Free Software Foundation; either version 2 of the     *
+ *   License, or (at your option) any later version.                        *
+ *                                                                          *
+ *   serial-programmer is distributed in the hope that it will be useful,   *
+ *   but WITHOUT ANY WARRANTY; without even the implied warranty of         *
+ *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the          *
+ *   GNU General Public License for more details.                           *
+ *                                                                          *
+ *   You should have received a copy of the GNU General Public License      *
+ *   along with serial-programmer. If not, write to the Free Software       *
+ *   Foundation, Inc.,                                                      *
+ *   51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA.              *
+ ***************************************************************************/
 
 /* baud rate register value calculation */
 #ifndef F_CPU
@@ -17,9 +37,12 @@
 #endif
 #define BAUD_RATE   19200
 
-// FLASH Pagesize in words
+/* Time for SPI to settle before next operation. Larger means slower loads. */
+#define SPI_DELAY   2
+
+/* FLASH Pagesize in words */
 #define FPAGESIZE   32
-// EEPROM Pagesize in words
+/* EEPROM Pagesize in words */
 #define EPAGESIZE   4
 
 /* define pin for entering self programming mode */
