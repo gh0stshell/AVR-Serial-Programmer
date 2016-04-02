@@ -16,10 +16,10 @@ mode, and with or without verification.
           returned resulting in failure to sync. Added int checkBytes for the
           tests and assigned this to numBytes when needed. Problem showed up
           after Ubuntu upgrade.
+11/2/2016 Upgrade to QT5 and removal of qextserialport in favour of QT5 QSerial.
 */
 /****************************************************************************
- *   Copyright (C) 2007 by Ken Sarkies                                      *
- *   ksarkies@trinity.asn.au                                                *
+ *   Copyright (C) 2007 by Ken Sarkies ksarkies@internode.on.net            *
  *                                                                          *
  *   This file is part of serial-programmer                                 *
  *                                                                          *

@@ -3,8 +3,7 @@ Title:    Atmel Microcontroller Serial Port FLASH loader
 */
 
 /****************************************************************************
- *   Copyright (C) 2007 by Ken Sarkies                                      *
- *   ksarkies@trinity.asn.au                                                *
+ *   Copyright (C) 2007 by Ken Sarkies ksarkies@internode.on.net            *
  *                                                                          *
  *   This file is part of serial-programmer                                 *
  *                                                                          *
