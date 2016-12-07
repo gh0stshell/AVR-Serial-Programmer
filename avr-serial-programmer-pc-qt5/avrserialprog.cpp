@@ -147,6 +147,9 @@ device is interrogated for details, and inforamtion about lock and fuse bits is
 retrieved.
 
 @param[in] p Serial Port object pointer
+@param[in] uint initialBaudrate: index to baudrate array
+@param[in] bool commandLine: use command line I/O only
+@param[in] bool debug: print debug messages
 @param[in] parent Parent widget.
 */
 
